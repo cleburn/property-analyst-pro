@@ -12,15 +12,13 @@
 2. [The Problem](#-the-problem)
 3. [What It Does](#-what-it-does)
 4. [How It Works](#-how-it-works)
-5. [Key Insights](#-key-insights-from-current-data)
+5. [Key Insights](#-key-insights-from-current-data-v12)
 6. [Example Visualizations](#-example-visualizations)
 7. [App Screenshots](#-app-screenshots)
 8. [What's Next](#-whats-next)
 9. [Technical Stack](#️-technical-stack)
-10. [Project Structure](#-project-structure)
-11. [Background](#-background)
-12. [Contact & Collaboration](#-contact--collaboration)
-13. [License](#-license)
+10. [Contact & Collaboration](#-contact--collaboration)
+11. [License](#-license)
 
 ---
 
@@ -260,53 +258,6 @@ Ranks neighborhoods by historical growth rates (2000-2025 weighted CAGR with red
 
 **Deployment:**
 - Streamlit Cloud (deployed ✅)
-
----
-
-## 📁 Project Structure
-```
-austin-investment-analyzer/
-├── app.py                                # Streamlit web interface (v1.2)
-├── requirements.txt                      # Python dependencies
-├── notebooks/
-│   ├── austin_analyzer_v1.2.ipynb       # v1.2 analysis notebook
-│   ├── process_v1.2_data.py             # Data processing script
-│   ├── scripts/archive/                 # Archived test scripts
-│   └── texas-real-estate-analyzer.ipynb # Legacy v1.0 notebook
-├── data/
-│   ├── raw/                             # Original datasets (gitignored)
-│   └── processed/                       # Cleaned data (gitignored)
-├── visuals/                             # Generated charts and screenshots
-│   ├── screenshots/                     # App screenshots for README
-│   ├── austin_metro_price_trends.png
-│   ├── top_neighborhoods_cashflow.png
-│   └── top_neighborhoods_appreciation.png
-├── .gitignore
-└── README.md
-```
-
----
-
-## 🎓 Background
-
-This project is part of a 9-month AI Engineer roadmap focused on building practical, income-generating tools at the intersection of real estate investment and data science.
-
-**Why Austin?**
-- Strong market fundamentals (top 10 US metro for growth)
-- Rich public data availability
-- High short-term rental demand (tourism + business travel)
-- Personal expertise: 5+ years managing investment properties in Texas
-
-**Methodology (v1.2):**
-The analysis approach prioritizes **accurate calculations** and **conservative assumptions**:
-- **Corrected operating expenses:** 2.2% property tax (Austin actual), STR expenses ($200 utilities + $300 cleaning + $75 supplies + 3% platform fees)
-- **Realistic rent estimates:** Price-tier based LTR rents (0.6-0.75% of value), actual Airbnb data for STR
-- **Robust appreciation modeling:** Weighted regression using 25 years of data (2000-2025) with reduced weight for anomaly period (June 2020 - April 2023)
-- **User-adjustable assumptions:** Down payment (3.5%-100%), interest rates, hold period, all expenses
-- **Real occupancy data:** Not theoretical maximums
-- **Conservative projections:** Current market rates (7%), realistic expense ratios
-
-This ensures recommendations are grounded in reality and remain viable across market conditions.
 
 ---
 
