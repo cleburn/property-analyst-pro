@@ -179,7 +179,7 @@ Compares monthly cash flow potential across the highest-performing neighborhoods
 - Long-term rentals (LTR)
 
 ### Top 10 Neighborhoods - Appreciation Potential
-Ranks neighborhoods by historical growth rates (2015-2019 baseline CAGR), showing which areas have the strongest long-term appreciation track records.
+Ranks neighborhoods by historical growth rates (2000-2025 weighted CAGR with reduced weight for June 2020 - April 2023 anomaly period), showing which areas have the strongest long-term appreciation track records.
 
 **All charts are automatically saved to the `/visuals` folder when you run the analysis.**
 
