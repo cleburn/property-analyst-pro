@@ -347,7 +347,7 @@ df_merged['str_cash_on_cash_return'] = (
 def calculate_ltr_rent_by_price_tier(price):
     """Price-tier based rent: higher-priced homes have lower rent-to-price ratios"""
     if price < 300000:
-        return price * 0.0075  # 0.75% - Entry-level SFH (2-3BR)
+        return price * 0.0080  # 0.80% - Entry-level SFH (2-3BR) - validated Nov 2025
     elif price < 500000:
         return price * 0.0065  # 0.65% - Mid-market SFH (3-4BR)
     elif price < 700000:
@@ -359,7 +359,7 @@ df_merged['estimated_ltr_rent'] = df_merged['current_price'].apply(calculate_ltr
 df_merged['ltr_effective_rent'] = df_merged['estimated_ltr_rent'] * (1 - LTR_VACANCY_RATE)
 
 print(f"\n💡 LTR Rent Calculation (Price-Tier Method):")
-print(f"   <$300k: 0.75% | $300-500k: 0.65% | $500-700k: 0.60% | >$700k: 0.65%")
+print(f"   <$300k: 0.80% | $300-500k: 0.65% | $500-700k: 0.60% | >$700k: 0.65%")
 print(f"   Median ${df_merged['current_price'].median():.0f} home → ${df_merged['estimated_ltr_rent'].median():.0f}/month rent")
 df_merged['ltr_monthly_cash_flow'] = df_merged['ltr_effective_rent'] - df_merged['monthly_base_costs']
 df_merged['ltr_annual_cash_flow'] = df_merged['ltr_monthly_cash_flow'] * 12
