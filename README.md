@@ -188,27 +188,27 @@ Ranks neighborhoods by historical growth rates (2015-2019 baseline CAGR), showin
 ## 📸 App Screenshots
 
 ### Home Page & Investment Criteria
-![Home Page](screenshots/home_page.png)
+![Home Page](visuals/screenshots/home_page.png)
 *The analyzer's main interface - set your budget, strategy, and rental type to get instant recommendations*
 
 ### Cash Flow Strategy - Top 3 Neighborhoods (STR)
-![Cash Flow STR Results](screenshots/cashflow_str_top3.png)
+![Cash Flow STR Results](visuals/screenshots/cashflow_str_top3.png)
 *Top 3 neighborhoods ranked by short-term rental (Airbnb) cash flow potential*
 
 ### Cash Flow Strategy - Long-Term Rentals
-![Cash Flow LTR Results](screenshots/cashflow_ltr.png)
+![Cash Flow LTR Results](visuals/screenshots/cashflow_ltr.png)
 *Compare results when switching to long-term rental strategy - shows how recommendations adapt*
 
 ### Appreciation Strategy Results
-![Appreciation Strategy](screenshots/appreciation.png)
+![Appreciation Strategy](visuals/screenshots/appreciation.png)
 *Switch to Appreciation strategy to see neighborhoods ranked by historical growth rates*
 
 ### Detailed Neighborhood Metrics
-![Neighborhood Detail Card](screenshots/detail_card.png)
+![Neighborhood Detail Card](visuals/screenshots/detail_card.png)
 *Each recommended neighborhood includes comprehensive investment metrics: monthly cash flow, appreciation potential, occupancy rates, and confidence indicators*
 
 ### Market Analysis Visualizations
-![Top Neighborhoods Comparison](screenshots/top_neighborhoods_cashflow.png)
+![Top Neighborhoods Comparison](visuals/screenshots/top_neighborhoods_cashflow.png)
 *Built-in visualizations compare cash flow potential across top-performing neighborhoods*
 
 ---
