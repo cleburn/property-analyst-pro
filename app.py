@@ -130,12 +130,116 @@ with st.sidebar.expander("⚙️ Advanced Assumptions"):
 
     hold_period = st.number_input("Hold Period (Years)", value=5, min_value=1, max_value=30, step=1)
 
+    st.markdown("**Tax Considerations:**")
+    tax_bracket = st.selectbox(
+        "Federal Tax Bracket %",
+        [10, 12, 22, 24, 32, 35, 37],
+        index=3,  # Default to 24%
+        help="Used to calculate tax benefits from mortgage interest deduction and depreciation"
+    ) / 100
+
     st.info("💡 Appreciation rates are auto-calculated from neighborhood historical data")
 
 # Analyze button
 analyze_button = st.sidebar.button("🔍 Find Best Neighborhoods", type="primary")
 
 st.sidebar.markdown("---")
+
+# =============================================================================
+# TAX BENEFIT CALCULATION FUNCTIONS
+# =============================================================================
+
+def calculate_mortgage_interest(loan_amount, interest_rate, year):
+    """
+    Calculate mortgage interest paid in a specific year.
+    Uses amortization schedule to determine interest vs principal split.
+
+    Args:
+        loan_amount: Original loan amount
+        interest_rate: Annual interest rate (e.g., 0.07 for 7%)
+        year: Which year (1-30)
+
+    Returns:
+        Total interest paid in that year
+    """
+    if loan_amount == 0 or interest_rate == 0:
+        return 0
+
+    monthly_rate = interest_rate / 12
+    total_payments = 30 * 12
+    monthly_payment = loan_amount * (monthly_rate * (1 + monthly_rate)**total_payments) / ((1 + monthly_rate)**total_payments - 1)
+
+    # Calculate interest for each month of the year
+    annual_interest = 0
+    remaining_balance = loan_amount
+
+    start_month = (year - 1) * 12
+    end_month = year * 12
+
+    for month in range(start_month, end_month):
+        if month >= total_payments:
+            break
+
+        # Interest for this month
+        monthly_interest = remaining_balance * monthly_rate
+        monthly_principal = monthly_payment - monthly_interest
+
+        annual_interest += monthly_interest
+        remaining_balance -= monthly_principal
+
+    return annual_interest
+
+def calculate_depreciation_deduction(property_value):
+    """
+    Calculate annual depreciation deduction for residential rental property.
+
+    Residential rental properties depreciate over 27.5 years.
+    Land cannot be depreciated - assume 20% land value, 80% building.
+
+    Args:
+        property_value: Total property value
+
+    Returns:
+        Annual depreciation deduction
+    """
+    depreciable_basis = property_value * 0.80  # 80% building, 20% land
+    annual_depreciation = depreciable_basis / 27.5
+    return annual_depreciation
+
+def calculate_tax_benefits(property_value, loan_amount, interest_rate, operating_expenses, year=1):
+    """
+    Calculate total tax deductions and tax savings for rental property.
+
+    Tax deductible items:
+    - Mortgage interest
+    - Depreciation
+    - Operating expenses (property tax, insurance, maintenance, utilities, etc.)
+
+    Args:
+        property_value: Property value
+        loan_amount: Mortgage loan amount
+        interest_rate: Annual interest rate
+        operating_expenses: Annual operating expenses
+        year: Which year of ownership (for interest calculation)
+
+    Returns:
+        dict with interest, depreciation, total_deductions, tax_savings
+    """
+    # Calculate mortgage interest for this year
+    mortgage_interest = calculate_mortgage_interest(loan_amount, interest_rate, year)
+
+    # Calculate depreciation
+    depreciation = calculate_depreciation_deduction(property_value)
+
+    # Total deductions
+    total_deductions = mortgage_interest + depreciation + operating_expenses
+
+    return {
+        'mortgage_interest': mortgage_interest,
+        'depreciation': depreciation,
+        'operating_expenses': operating_expenses,
+        'total_deductions': total_deductions
+    }
 
 # =============================================================================
 # MAIN CONTENT
@@ -249,9 +353,54 @@ if analyze_button:
             df_filtered['calc_monthly_cf'] = df_filtered['calc_ltr_effective_rent'] - df_filtered['calc_total_costs']
             income_col = 'calc_ltr_rent'
 
-        # Cash-on-cash return
+        # Cash-on-cash return (pre-tax)
         df_filtered['calc_coc_return'] = (
             df_filtered['calc_monthly_cf'] * 12 / (df_filtered['current_price'] * down_payment_pct) * 100
+        )
+
+        # =============================================================================
+        # TAX BENEFIT CALCULATIONS
+        # =============================================================================
+
+        # Calculate loan amount for tax benefit calculations
+        df_filtered['calc_loan_amount'] = df_filtered['current_price'] * (1 - down_payment_pct)
+
+        # Calculate annual operating expenses (tax deductible)
+        # Includes: property tax, insurance, maintenance, and STR-specific costs
+        df_filtered['calc_annual_operating_expenses'] = (
+            df_filtered['calc_property_tax'] * 12 +
+            df_filtered['calc_insurance'] * 12 +
+            df_filtered['calc_maintenance'] * 12
+        )
+
+        if rental_code == "str":
+            df_filtered['calc_annual_operating_expenses'] += df_filtered['calc_str_additional'] * 12
+
+        # Calculate tax benefits for Year 1
+        def apply_tax_benefits(row):
+            benefits = calculate_tax_benefits(
+                property_value=row['current_price'],
+                loan_amount=row['calc_loan_amount'],
+                interest_rate=interest_rate,
+                operating_expenses=row['calc_annual_operating_expenses'],
+                year=1
+            )
+            return pd.Series(benefits)
+
+        tax_benefits_df = df_filtered.apply(apply_tax_benefits, axis=1)
+        df_filtered['calc_mortgage_interest'] = tax_benefits_df['mortgage_interest']
+        df_filtered['calc_depreciation'] = tax_benefits_df['depreciation']
+        df_filtered['calc_total_deductions'] = tax_benefits_df['total_deductions']
+
+        # Calculate tax savings
+        df_filtered['calc_tax_savings'] = df_filtered['calc_total_deductions'] * tax_bracket
+
+        # After-tax cash flow = Pre-tax cash flow + Tax savings
+        df_filtered['calc_monthly_cf_after_tax'] = df_filtered['calc_monthly_cf'] + (df_filtered['calc_tax_savings'] / 12)
+
+        # After-tax cash-on-cash return
+        df_filtered['calc_coc_return_after_tax'] = (
+            df_filtered['calc_monthly_cf_after_tax'] * 12 / (df_filtered['current_price'] * down_payment_pct) * 100
         )
 
         # Total ROI (simplified)
@@ -321,8 +470,8 @@ if analyze_button:
         st.metric("Matching Criteria", f"{len(df_filtered):,}")
 
     with col3:
-        positive_cf = (df_filtered['calc_monthly_cf'] > 0).sum()
-        st.metric("Positive Cash Flow", f"{positive_cf} ({positive_cf/len(df_filtered)*100:.1f}%)")
+        positive_cf_after_tax = (df_filtered['calc_monthly_cf_after_tax'] > 0).sum()
+        st.metric("Positive Cash Flow (After-Tax)", f"{positive_cf_after_tax} ({positive_cf_after_tax/len(df_filtered)*100:.1f}%)")
 
     with col4:
         median_price = df_filtered['current_price'].median()
@@ -355,16 +504,16 @@ if analyze_button:
 
             with col2:
                 st.metric(
-                    "Monthly Cash Flow",
+                    "Monthly Cash Flow (Pre-Tax)",
                     f"${row['calc_monthly_cf']:,.0f}",
-                    f"${row['calc_monthly_cf']*12:,.0f}/year"
+                    f"${row['calc_monthly_cf_after_tax']:,.0f} after-tax"
                 )
 
             with col3:
                 st.metric(
-                    "Cash-on-Cash Return",
-                    f"{row['calc_coc_return']:.1f}%",
-                    "annually"
+                    "Cash-on-Cash Return (After-Tax)",
+                    f"{row['calc_coc_return_after_tax']:.1f}%",
+                    f"{row['calc_coc_return']:.1f}% pre-tax"
                 )
 
             with col4:
@@ -403,6 +552,26 @@ if analyze_button:
                 st.write(f"**TOTAL: ${row['calc_total_costs']:,.0f}**")
 
             with col3:
+                st.markdown("**💵 Tax Benefits (Year 1):**")
+                st.write(f"Mortgage Interest: ${row['calc_mortgage_interest']:,.0f}")
+                st.write(f"Depreciation: ${row['calc_depreciation']:,.0f}")
+                st.write(f"Operating Expenses: ${row['calc_annual_operating_expenses']:,.0f}")
+                st.write(f"**Total Deductions: ${row['calc_total_deductions']:,.0f}**")
+                st.write(f"**Tax Savings ({tax_bracket*100:.0f}%): ${row['calc_tax_savings']:,.0f}/yr**")
+                st.caption(f"${row['calc_tax_savings']/12:,.0f}/mo reduces effective costs")
+
+            st.markdown("---")
+
+            # Investment Summary Row
+            col1, col2, col3 = st.columns(3)
+
+            with col1:
+                st.markdown("**📊 Pre-Tax vs After-Tax:**")
+                st.write(f"Pre-Tax Cash Flow: ${row['calc_monthly_cf']:,.0f}/mo")
+                st.write(f"After-Tax Cash Flow: ${row['calc_monthly_cf_after_tax']:,.0f}/mo")
+                st.write(f"**Tax Benefit: ${row['calc_monthly_cf_after_tax'] - row['calc_monthly_cf']:,.0f}/mo**")
+
+            with col2:
                 st.markdown("**📈 Investment Summary:**")
                 down = row['current_price'] * down_payment_pct
                 if down_payment_pct == 1.0:
@@ -411,8 +580,12 @@ if analyze_button:
                     st.write(f"Down Payment ({down_payment_pct*100:.0f}%): ${down:,.0f}")
                 st.write(f"Est. Closing Costs: ${row['current_price']*0.03:,.0f}")
                 st.write(f"**Total Initial Investment: ${down + row['current_price']*0.03:,.0f}**")
+
+            with col3:
+                st.markdown("**🏘️ Property Details:**")
                 st.write(f"Historical Appreciation: {row['baseline_cagr']:.2f}%/yr")
                 st.write(f"Bedrooms (median): {row['median_bedrooms']:.0f}")
+                st.write(f"Distance from '22 Peak: {row['distance_from_peak']:.1f}%")
 
             st.markdown("---")
 
@@ -428,9 +601,16 @@ if analyze_button:
             # Calculate remaining mortgage balance if financed
             if down_payment_pct < 1.0:
                 loan_amount = row['current_price'] * (1 - down_payment_pct)
-                # Rough estimate: ~15% paid off in 5 years, ~30% in 10 years
-                payoff_pct = 0.15 * (hold_period / 5) if hold_period <= 10 else 0.30
-                remaining_balance = loan_amount * (1 - payoff_pct)
+                # Proper amortization formula
+                monthly_rate = interest_rate / 12
+                total_payments = 30 * 12  # 30-year loan
+                payments_made = hold_period * 12
+
+                # Remaining balance formula
+                remaining_balance = loan_amount * (
+                    ((1 + monthly_rate)**total_payments - (1 + monthly_rate)**payments_made) /
+                    ((1 + monthly_rate)**total_payments - 1)
+                )
             else:
                 remaining_balance = 0
 
@@ -448,9 +628,12 @@ if analyze_button:
             with col1:
                 st.markdown("*💰 Sell (w/ Cap Gains Tax):*")
                 # Long-term cap gains tax (15% for most investors)
+                # Note: Investment property, no primary residence exclusion
                 cap_gains_tax = appreciation_gain * 0.15
 
                 net_proceeds = future_value - remaining_balance - cap_gains_tax - (future_value * 0.06)  # 6% selling costs
+
+                st.caption("⚠️ Assumes 15% long-term cap gains rate. Consult tax professional for depreciation recapture.")
 
                 st.write(f"Future Value: ${future_value:,.0f}")
                 st.write(f"Equity: ${equity:,.0f}")
@@ -461,17 +644,21 @@ if analyze_button:
                 st.write(f"**Net Proceeds: ${net_proceeds:,.0f}**")
 
             with col2:
-                st.markdown("*🔄 Cash-Out Refi (75% of Equity):*")
-                # Refi: Can cash out up to 75% of equity
-                refi_cash_out = equity * 0.75
+                st.markdown("*🔄 Cash-Out Refi (80% LTV):*")
 
-                # New loan amount
-                if down_payment_pct < 1.0:
-                    # Had financing: New loan = remaining balance + cash out
-                    new_loan_amount = remaining_balance + refi_cash_out
-                else:
-                    # Cash purchase: New loan = cash out amount
-                    new_loan_amount = refi_cash_out
+                # Industry standard: 80% loan-to-value on future property value
+                refi_closing_costs = 5000
+                max_new_loan = future_value * 0.80
+
+                # Cash out = new loan - remaining balance - closing costs
+                refi_cash_out = max_new_loan - remaining_balance - refi_closing_costs
+
+                # Verify sufficient equity
+                if refi_cash_out < 0:
+                    refi_cash_out = 0
+                    max_new_loan = remaining_balance  # Can't refi if insufficient equity
+
+                new_loan_amount = max_new_loan
 
                 # New mortgage payment (6% refi rate, 30-year term)
                 refi_rate = 0.06

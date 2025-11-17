@@ -52,15 +52,20 @@ No installation required - just click and start analyzing neighborhoods!
    pip install -r requirements.txt
 ```
 
-3. **Run the web app:**
+3. **Data is included:**
+   - Pre-processed data (`data/processed/neighborhoods_v1.2_complete.csv`) is included in the repository
+   - You can run the app immediately without regenerating data
+   - (Optional) To regenerate data with updated sources: `python process_data.py`
+
+4. **Run the web app:**
 ```bash
    streamlit run app.py
 ```
 
-4. **Use the tool:**
+5. **Use the tool:**
    - The app will open automatically in your browser at `http://localhost:8501`
    - Adjust your budget range, investment strategy, and rental type in the sidebar
-   - Click "Find Best Neighborhoods" to see your top 3 recommendations
+   - Click "Find Best Neighborhoods" to see your top 5 recommendations
 
 ---
 
@@ -95,7 +100,7 @@ Then it:
   - Current market position (distance from 2022 peak)
   - Confidence indicators (number of comparable listings)
 
-**Note:** The web app focuses on delivering fast, personalized recommendations. The full exploratory analysis, methodology documentation, and market trend visualizations are available in the `/notebooks` and `/visuals` folders of this repository.
+**Note:** The web app focuses on delivering fast, personalized recommendations. Market trend visualizations are available in the `/visuals` folder. Historical analysis notebooks can be found in `/archive/notebooks`.
 ---
 
 ## 🔍 How It Works
@@ -130,7 +135,13 @@ For each neighborhood, the tool calculates:
 
 **Exit Strategy Analysis:**
 - **Sell scenario:** Property value at exit, capital gains tax (15%), selling costs (6%), net proceeds
-- **Refinance scenario:** 75% equity cash-out, new loan amount, new mortgage payment, updated cash flow
+- **Refinance scenario:** 80% LTV cash-out, $5k closing costs, new loan amount, new mortgage payment, updated cash flow
+
+**Tax Benefits:**
+- **Mortgage interest deduction:** Calculated per year based on amortization schedule
+- **Depreciation:** 27.5-year residential rental (80% of property value)
+- **Operating expense deductions:** All rental expenses reduce taxable income
+- **After-tax cash flow:** Shows realistic returns including tax savings
 
 ### Ranking System
 Neighborhoods are ranked by the metric that matters most to your strategy:
@@ -145,11 +156,12 @@ Only neighborhoods with **7+ Airbnb listings** and **complete data** across all 
 ## 📊 Key Insights from Current Data (v1.2)
 
 **Austin Market Reality (as of November 2025):**
-- **Cash Flow is challenging** — With corrected calculations (2.2% property tax + STR expenses), 0/185 neighborhoods show positive monthly cash flow at 20% down / 7% interest
-- **Total ROI remains attractive** — Despite negative monthly cash flow, many neighborhoods show positive 5-year total ROI when appreciation and equity buildup are included
-- **LTR more viable than STR** — After fixes, LTR shows better cash flow potential than STR in most neighborhoods
+- **Pre-tax cash flow is challenging** — With corrected calculations (2.2% property tax + STR expenses), most neighborhoods show negative monthly pre-tax cash flow at 20% down / 7% interest
+- **Tax benefits change the picture** — After accounting for mortgage interest deduction, depreciation, and operating expense deductions, many neighborhoods become cash-flow positive
+- **Total ROI remains attractive** — Many neighborhoods show positive 5-year total ROI when appreciation, equity buildup, and tax benefits are included
+- **LTR more viable than STR** — After fixes, LTR shows better pre-tax cash flow potential than STR in most neighborhoods
 - **Appreciation opportunity exists** — Neighborhoods are 20-30% below their 2022 peaks with median 5.52% weighted CAGR (2000-2025)
-- **Cash purchase changes the game** — 100% down payment eliminates negative cash flow in many neighborhoods
+- **Cash purchase changes the game** — 100% down payment eliminates mortgage interest but loses tax deduction benefits
 
 **Market Stats:**
 - **Median home price:** $541,399
@@ -157,7 +169,7 @@ Only neighborhoods with **7+ Airbnb listings** and **complete data** across all 
 - **Neighborhoods analyzed:** 185 Austin neighborhoods
 - **Data through:** October 2025
 
-**Key Takeaway:** v1.2's corrected calculations reveal that Austin real estate is primarily an **appreciation play** with **Total ROI** as the better strategy vs pure cash flow. Short-term cash flow is difficult at current prices and interest rates, but long-term wealth building through appreciation remains strong.
+**Key Takeaway:** v1.2's corrected calculations reveal that Austin real estate offers strong returns when tax benefits are included. While pre-tax cash flow can be challenging at current prices, **after-tax cash flow combined with appreciation** makes Austin an attractive market for buy-and-hold investors who can benefit from rental property tax advantages.
 
 ---
 
@@ -179,7 +191,7 @@ Compares monthly cash flow potential across the highest-performing neighborhoods
 ### Top 10 Neighborhoods - Appreciation Potential
 Ranks neighborhoods by historical growth rates (2000-2025 weighted CAGR with reduced weight for June 2020 - April 2023 anomaly period), showing which areas have the strongest long-term appreciation track records.
 
-**All charts are automatically saved to the `/visuals` folder when you run the analysis.**
+**Charts are available in the `/visuals` folder. To regenerate with updated data, run `python process_data.py`.**
 
 ---
 
@@ -215,13 +227,15 @@ Ranks neighborhoods by historical growth rates (2000-2025 weighted CAGR with red
 
 ### Current Version (v1.2 - Complete ✅)
 **Major improvements over v1.0:**
-- ✅ **Critical calculation fixes:** Property tax (2.2%), STR operating expenses (~$600/mo)
+- ✅ **Critical calculation fixes:** Property tax (2.2%), STR operating expenses (~$600/mo), proper mortgage amortization
+- ✅ **Tax benefit calculations:** Mortgage interest deduction, depreciation (27.5 years), operating expense deductions
+- ✅ **Pre-tax and after-tax metrics:** Shows both perspectives for accurate ROI analysis
 - ✅ **Robust appreciation modeling:** Weighted regression using 25 years of data (2000-2025)
 - ✅ **Price-tier LTR rents:** Realistic estimates based on property value
 - ✅ **3 investment strategies:** Cash Flow, Total ROI, Appreciation
-- ✅ **Exit strategy analysis:** Sell vs Refinance scenarios with tax implications
+- ✅ **Exit strategy analysis:** Sell vs Refinance (80% LTV) with accurate formulas
 - ✅ **100% cash purchase option:** Compare cash vs financed approaches
-- ✅ **User-adjustable assumptions:** Financing, hold period, expenses
+- ✅ **User-adjustable assumptions:** Financing, hold period, expenses, tax bracket
 - ✅ **Interactive visualizations:** Plotly charts for data exploration
 
 ### Roadmap (Future Phases)
@@ -236,7 +250,7 @@ Ranks neighborhoods by historical growth rates (2000-2025 weighted CAGR with red
 - Real-time MLS integration
 - Automated listing alerts when new opportunities match criteria
 - Portfolio optimization (suggest best mix of neighborhoods for diversification)
-- Advanced tax strategy modeling (1031 exchanges, depreciation)
+- Advanced tax strategy modeling (1031 exchanges, cost segregation studies)
 
 ---
 
@@ -282,6 +296,6 @@ This project is open source and available for educational and personal use. Data
 
 ---
 
-**Last Updated:** November 16, 2025
+**Last Updated:** November 17, 2025
 **Version:** 1.2
-**Status:** Production — Deployed to Streamlit Cloud with critical fixes and enhanced analytics
+**Status:** Production — Deployed to Streamlit Cloud with tax benefit calculations and enhanced analytics
