@@ -109,9 +109,7 @@ rental_type = st.sidebar.radio(
 )
 rental_code = "str" if "Short-Term" in rental_type else "ltr"
 
-# Show LTR rent calculation info
-if rental_code == "ltr":
-    st.sidebar.info("💡 LTR rents estimated at 0.8% of home value monthly (Austin market standard)")
+# LTR rent calculation info now shown in results section
 
 # Advanced assumptions
 with st.sidebar.expander("⚙️ Advanced Assumptions"):
@@ -223,9 +221,9 @@ if analyze_button:
         else:
             # LTR - use price-tier method for realistic SFH rents
             def calc_ltr_rent_tier(price):
-                """Price-tier: <$300k=0.75%, $300-500k=0.65%, $500-700k=0.60%, >$700k=0.65%"""
+                """Price-tier: <$300k=0.80%, $300-500k=0.65%, $500-700k=0.60%, >$700k=0.65%"""
                 if price < 300000:
-                    return price * 0.0075
+                    return price * 0.0080
                 elif price < 500000:
                     return price * 0.0065
                 elif price < 700000:
@@ -233,7 +231,19 @@ if analyze_button:
                 else:
                     return price * 0.0065
 
+            def get_ltr_rent_percentage(price):
+                """Get the percentage text for LTR rent calculation"""
+                if price < 300000:
+                    return "0.80%"
+                elif price < 500000:
+                    return "0.65%"
+                elif price < 700000:
+                    return "0.60%"
+                else:
+                    return "0.65%"
+
             df_filtered['calc_ltr_rent'] = df_filtered['current_price'].apply(calc_ltr_rent_tier)
+            df_filtered['calc_ltr_rent_pct'] = df_filtered['current_price'].apply(get_ltr_rent_percentage)
             df_filtered['calc_ltr_effective_rent'] = df_filtered['calc_ltr_rent'] * 0.92  # 8% vacancy
             df_filtered['calc_total_costs'] = df_filtered['calc_base_costs']
             df_filtered['calc_monthly_cf'] = df_filtered['calc_ltr_effective_rent'] - df_filtered['calc_total_costs']
@@ -376,6 +386,8 @@ if analyze_button:
                     st.write(f"Occupancy Rate: {row['occupancy_rate']:.1f}%")
                     st.write(f"Nightly Rate: ${row['median_nightly_rate']:.0f}")
                     st.write(f"Listings in Area: {row['listing_count']:.0f}")
+                else:
+                    st.caption(f"Rents estimated at {row['calc_ltr_rent_pct']} of home value")
 
             with col2:
                 st.markdown("**📉 Monthly Costs:**")
