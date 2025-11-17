@@ -41,3 +41,6 @@ data/processed/
 
 # Streamlit
 .streamlit/
+
+# Claude Code
+.claude/

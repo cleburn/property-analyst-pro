@@ -1,6 +1,8 @@
-# 🏠 Austin Real Estate Investment Analyzer
+# 🏠 Austin Real Estate Investment Analyzer v1.2
 
 **AI-powered tool that helps real estate investors identify the best neighborhoods in Austin based on cash flow potential and appreciation metrics.**
+
+**Version 1.2** brings critical calculation fixes, robust appreciation modeling using 25 years of data, and comprehensive exit strategy analysis.
 
 ---
 
@@ -49,7 +51,7 @@ No installation required - just click and start analyzing neighborhoods!
 
 2. **Install dependencies:**
 ```bash
-   pip install streamlit pandas numpy
+   pip install -r requirements.txt
 ```
 
 3. **Run the web app:**
@@ -77,17 +79,21 @@ Real estate investors spend hours manually comparing neighborhoods, calculating 
 
 ## 💡 What It Does
 
-The analyzer takes three inputs from you:
+The analyzer takes your inputs:
 1. **Budget Range** (e.g., $250K - $400K)
-2. **Investment Strategy** (Cash Flow or Appreciation)
-3. **Rental Type** (Short-term rental (Airbnb) or Long-term rental)
+2. **Investment Strategy** (Cash Flow, Total ROI, or Appreciation)
+3. **Rental Type** (Short-term rental (STR/Airbnb) or Long-term rental (LTR))
+4. **Financing Terms** (Down payment 3.5%-100%, interest rate)
+5. **Hold Period** (Investment timeframe for ROI calculations)
 
 Then it:
-- Filters 185 Austin neighborhoods to match your budget
+- Filters 45 Austin neighborhoods with complete data to match your budget
 - Ranks them based on your chosen strategy
-- Returns the **top 3 neighborhoods** with detailed metrics:
-  - Expected monthly cash flow (STR and LTR)
-  - Historical appreciation rates (2015-2019 baseline)
+- Returns the **top 5 neighborhoods** with comprehensive metrics:
+  - Monthly cash flow (STR and LTR with realistic rent estimates)
+  - Total ROI over your hold period (includes cash flow + equity + appreciation)
+  - Historical appreciation rates (weighted 2000-2025 CAGR)
+  - Exit strategy analysis (Sell vs Refinance scenarios)
   - Current market position (distance from 2022 peak)
   - Confidence indicators (number of comparable listings)
 
@@ -103,41 +109,57 @@ The tool combines three public datasets to create a complete picture:
 2. **Zillow Observed Rent Index (ZORI)** — Long-term rental rates by neighborhood
 3. **Inside Airbnb** — 15,000+ short-term rental listings with occupancy and income data
 
-### Analysis Engine
+### Analysis Engine (v1.2 - Critical Fixes Applied)
 For each neighborhood, the tool calculates:
 
 **Cash Flow Strategy Metrics:**
-- Monthly short-term rental (STR) income: `nightly rate × 30 days × occupancy rate`
-- Monthly long-term rental (LTR) estimate: `STR income ÷ 2.5` (industry standard)
-- Monthly costs: Mortgage (20% down, 7% interest) + taxes (1.2%) + insurance (0.5%) + maintenance (1%)
-- **Net cash flow:** `Income - Costs`
+- **STR income:** `nightly rate × 30 days × occupancy rate`
+- **LTR income:** Price-tier based estimates (0.6-0.75% of home value monthly, varies by price range)
+- **Monthly costs:** Mortgage (user-adjustable down payment & rate) + property tax (2.2% ✅ corrected from 1.2%) + insurance (0.5%) + maintenance (1%)
+- **STR additional costs:** Utilities ($200), cleaning (~$300), supplies ($75), platform fees (3%) ✅
+- **Net cash flow:** `Income - Total Costs`
+
+**Total ROI Metrics:**
+- **Cumulative cash flow** over hold period
+- **Equity buildup** (principal paydown if financed)
+- **Appreciation** (property value increase)
+- **Total ROI:** `(Cash Flow + Equity + Appreciation) / Initial Investment`
 
 **Appreciation Strategy Metrics:**
-- Pre-pandemic baseline growth rate (2015-2019 CAGR)
+- **Weighted baseline CAGR (2000-2025):** Uses 25 years of data with reduced weight (0.3x) for anomaly period (June 2020 - April 2023) ✅
 - Current recovery trajectory (2023-2025 CAGR)
 - Distance from 2022 market peak (shows potential upside)
 
+**Exit Strategy Analysis:**
+- **Sell scenario:** Property value at exit, capital gains tax (15%), selling costs (6%), net proceeds
+- **Refinance scenario:** 75% equity cash-out, new loan amount, new mortgage payment, updated cash flow
+
 ### Ranking System
 Neighborhoods are ranked by the metric that matters most to your strategy:
-- **Cash Flow investors:** Sorted by highest monthly profit
-- **Appreciation investors:** Sorted by strongest historical growth
+- **Cash Flow investors:** Sorted by highest monthly profit (STR or LTR)
+- **Total ROI investors:** Sorted by best risk-adjusted returns over hold period
+- **Appreciation investors:** Sorted by strongest weighted historical growth (2000-2025 CAGR)
 
-Only neighborhoods with **10+ Airbnb listings** are included (ensures reliable data).
+Only neighborhoods with **10+ Airbnb listings** and **complete data** across all sources are included (ensures reliable analysis).
 
 ---
 
-## 📊 Key Insights from Current Data
+## 📊 Key Insights from Current Data (v1.2)
 
-**Austin Market Reality (as of October 2025):**
-- **Cash Flow via STR is viable** — Top neighborhoods generate $400-$5,000/month positive cash flow
-- **Cash Flow via LTR is difficult** — Most neighborhoods show negative cash flow at current interest rates (7%)
-- **Appreciation opportunity exists** — Top growth neighborhoods are 25-35% below their 2022 peaks
-- **Budget sweet spot:** $250K-$400K properties offer the best risk-adjusted returns
+**Austin Market Reality (as of November 2025):**
+- **Cash Flow is challenging** — With corrected calculations (2.2% property tax + STR expenses), 0/45 neighborhoods show positive monthly cash flow at 20% down / 7% interest
+- **Total ROI remains attractive** — Despite negative monthly cash flow, many neighborhoods show positive 5-year total ROI when appreciation and equity buildup are included
+- **LTR more viable than STR** — After fixes, LTR shows better cash flow potential than STR in most neighborhoods
+- **Appreciation opportunity exists** — Neighborhoods are 20-30% below their 2022 peaks with median 5.52% weighted CAGR (2000-2025)
+- **Cash purchase changes the game** — 100% down payment eliminates negative cash flow in many neighborhoods
 
-**Top Performers:**
-- **Coronado Hills:** $308K, +$5,071/month STR cash flow (28.8% annual return on price)
-- **North Lamar:** $292K, +$856/month STR cash flow + 11.4% historical appreciation
-- **Georgian Acres:** $291K, +$713/month STR cash flow + 11.8% historical appreciation
+**Market Stats:**
+- **Median home price:** $541,399
+- **Median weighted appreciation:** 5.52% CAGR (2000-2025)
+- **Neighborhoods analyzed:** 45 with complete data
+- **Data through:** October 2025
+
+**Key Takeaway:** v1.2's corrected calculations reveal that Austin real estate is primarily an **appreciation play** with **Total ROI** as the better strategy vs pure cash flow. Short-term cash flow is difficult at current prices and interest rates, but long-term wealth building through appreciation remains strong.
 
 ---
 
@@ -193,19 +215,22 @@ Ranks neighborhoods by historical growth rates (2015-2019 baseline CAGR), showin
 
 ## 🚀 What's Next
 
-### Current Version (MVP - Complete)
-This proof-of-concept demonstrates the full analysis pipeline:
-- ✅ Data ingestion and cleaning
-- ✅ Neighborhood-level metrics calculation
-- ✅ Strategy-based ranking system
-- ✅ Interactive web interface (Streamlit)
-- ✅ Data visualizations
+### Current Version (v1.2 - Complete ✅)
+**Major improvements over v1.0:**
+- ✅ **Critical calculation fixes:** Property tax (2.2%), STR operating expenses (~$600/mo)
+- ✅ **Robust appreciation modeling:** Weighted regression using 25 years of data (2000-2025)
+- ✅ **Price-tier LTR rents:** Realistic estimates based on property value
+- ✅ **3 investment strategies:** Cash Flow, Total ROI, Appreciation
+- ✅ **Exit strategy analysis:** Sell vs Refinance scenarios with tax implications
+- ✅ **100% cash purchase option:** Compare cash vs financed approaches
+- ✅ **User-adjustable assumptions:** Financing, hold period, expenses
+- ✅ **Interactive visualizations:** Plotly charts for data exploration
 
 ### Roadmap (Future Phases)
 
 **Phase 3:**
 - Expand to Houston, Dallas, San Antonio
-- Add financing scenario calculator (different down payments, interest rates)
+- Add more detailed financing scenarios and comparisons
 - Include off-market deal sources (wholesalers, foreclosures)
 - Property condition assessment (turnkey vs. rehab required)
 
@@ -213,41 +238,46 @@ This proof-of-concept demonstrates the full analysis pipeline:
 - Real-time MLS integration
 - Automated listing alerts when new opportunities match criteria
 - Portfolio optimization (suggest best mix of neighborhoods for diversification)
-- Mobile-responsive design and cloud deployment
+- Advanced tax strategy modeling (1031 exchanges, depreciation)
 
 ---
 
 ## 🛠️ Technical Stack
 
 **Data Processing:**
-- Python 3.11
+- Python 3.13
 - Pandas (data manipulation)
-- NumPy (numerical calculations)
+- NumPy (numerical calculations, weighted regression)
 
 **Analysis:**
 - Statistical modeling for cash flow projections
-- Time-series analysis for appreciation trends
+- Weighted linear regression for appreciation trends
+- Time-series analysis (25 years of data)
 
 **Visualization:**
-- Matplotlib & Seaborn (static charts)
+- Plotly (interactive charts)
 - Streamlit (interactive web interface)
 
 **Deployment:**
-- Local deployment (current)
-- Streamlit Cloud (planned)
+- Streamlit Cloud (deployed ✅)
 
 ---
 
 ## 📁 Project Structure
 ```
 austin-investment-analyzer/
-├── app.py                                # Streamlit web interface
+├── app.py                                # Streamlit web interface (v1.2)
+├── requirements.txt                      # Python dependencies
 ├── notebooks/
-│   └── texas-real-estate-analyzer.ipynb  # Main analysis notebook
+│   ├── austin_analyzer_v1.2.ipynb       # v1.2 analysis notebook
+│   ├── process_v1.2_data.py             # Data processing script
+│   ├── scripts/archive/                 # Archived test scripts
+│   └── texas-real-estate-analyzer.ipynb # Legacy v1.0 notebook
 ├── data/
-│   ├── raw/                              # Original datasets (not in Git)
-│   └── processed/                        # Cleaned data (not in Git)
-├── visuals/                              # Generated charts and graphs
+│   ├── raw/                             # Original datasets (gitignored)
+│   └── processed/                       # Cleaned data (gitignored)
+├── visuals/                             # Generated charts and screenshots
+│   ├── screenshots/                     # App screenshots for README
 │   ├── austin_metro_price_trends.png
 │   ├── top_neighborhoods_cashflow.png
 │   └── top_neighborhoods_appreciation.png
@@ -267,14 +297,16 @@ This project is part of a 9-month AI Engineer roadmap focused on building practi
 - High short-term rental demand (tourism + business travel)
 - Personal expertise: 5+ years managing investment properties in Texas
 
-**Methodology:**
-The analysis approach prioritizes **conservative assumptions** over optimistic projections:
-- 7% mortgage rates (current market reality, not historical lows)
-- Full operating expense modeling (taxes, insurance, maintenance, vacancies)
-- Real occupancy data (not theoretical maximums)
-- Pre-pandemic growth baselines (excludes 2020-2022 anomaly spike)
+**Methodology (v1.2):**
+The analysis approach prioritizes **accurate calculations** and **conservative assumptions**:
+- **Corrected operating expenses:** 2.2% property tax (Austin actual), STR expenses ($200 utilities + $300 cleaning + $75 supplies + 3% platform fees)
+- **Realistic rent estimates:** Price-tier based LTR rents (0.6-0.75% of value), actual Airbnb data for STR
+- **Robust appreciation modeling:** Weighted regression using 25 years of data (2000-2025) with reduced weight for anomaly period (June 2020 - April 2023)
+- **User-adjustable assumptions:** Down payment (3.5%-100%), interest rates, hold period, all expenses
+- **Real occupancy data:** Not theoretical maximums
+- **Conservative projections:** Current market rates (7%), realistic expense ratios
 
-This ensures recommendations remain viable even in less-than-ideal market conditions.
+This ensures recommendations are grounded in reality and remain viable across market conditions.
 
 ---
 
@@ -299,5 +331,6 @@ This project is open source and available for educational and personal use. Data
 
 ---
 
-**Last Updated:** October 25, 2025  
-**Status:** Phase 2 Complete — MVP deployed to Streamlit Cloud
+**Last Updated:** November 16, 2025
+**Version:** 1.2
+**Status:** Production — Deployed to Streamlit Cloud with critical fixes and enhanced analytics
