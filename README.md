@@ -13,12 +13,10 @@
 3. [What It Does](#-what-it-does)
 4. [How It Works](#-how-it-works)
 5. [Key Insights](#-key-insights-from-current-data-v12)
-6. [Example Visualizations](#-example-visualizations)
-7. [App Screenshots](#-app-screenshots)
-8. [What's Next](#-whats-next)
-9. [Technical Stack](#️-technical-stack)
-10. [Contact & Collaboration](#-contact--collaboration)
-11. [License](#-license)
+6. [What's Next](#-whats-next)
+7. [Technical Stack](#️-technical-stack)
+8. [Contact & Collaboration](#-contact--collaboration)
+9. [License](#-license)
 
 ---
 
@@ -170,56 +168,6 @@ Only neighborhoods with **7+ Airbnb listings** and **complete data** across all 
 - **Data through:** October 2025
 
 **Key Takeaway:** v1.2's corrected calculations reveal that Austin real estate offers strong returns when tax benefits are included. While pre-tax cash flow can be challenging at current prices, **after-tax cash flow combined with appreciation** makes Austin an attractive market for buy-and-hold investors who can benefit from rental property tax advantages.
-
----
-
-## 📈 Example Visualizations
-
-The tool generates comprehensive visualizations to help investors understand market trends:
-
-### Austin Metro Price Trends (2000-2025)
-Shows the complete price trajectory of the Austin metro area, highlighting:
-- Pre-pandemic steady growth (2015-2019)
-- COVID boom and 2022 peak
-- Current market correction and stabilization
-
-### Top 10 Neighborhoods - Cash Flow Comparison
-Compares monthly cash flow potential across the highest-performing neighborhoods for both:
-- Short-term rentals (STR/Airbnb)
-- Long-term rentals (LTR)
-
-### Top 10 Neighborhoods - Appreciation Potential
-Ranks neighborhoods by historical growth rates (2000-2025 weighted CAGR with reduced weight for June 2020 - April 2023 anomaly period), showing which areas have the strongest long-term appreciation track records.
-
-**Charts are available in the `/visuals` folder. To regenerate with updated data, run `python process_data.py`.**
-
----
-
-## 📸 App Screenshots
-
-### Home Page & Investment Criteria
-![Home Page](visuals/screenshots/home_page.png)
-*The analyzer's main interface - set your budget, strategy, and rental type to get instant recommendations*
-
-### Cash Flow Strategy - Top 3 Neighborhoods (STR)
-![Cash Flow STR Results](visuals/screenshots/cashflow_str_top3.png)
-*Top 3 neighborhoods ranked by short-term rental (Airbnb) cash flow potential*
-
-### Cash Flow Strategy - Long-Term Rentals
-![Cash Flow LTR Results](visuals/screenshots/cashflow_ltr.png)
-*Compare results when switching to long-term rental strategy - shows how recommendations adapt*
-
-### Appreciation Strategy Results
-![Appreciation Strategy](visuals/screenshots/appreciation.png)
-*Switch to Appreciation strategy to see neighborhoods ranked by historical growth rates*
-
-### Detailed Neighborhood Metrics
-![Neighborhood Detail Card](visuals/screenshots/detail_card.png)
-*Each recommended neighborhood includes comprehensive investment metrics: monthly cash flow, appreciation potential, occupancy rates, and confidence indicators*
-
-### Market Analysis Visualizations
-![Top Neighborhoods Comparison](visuals/screenshots/top_neighborhoods_cashflow.png)
-*Built-in visualizations compare cash flow potential across top-performing neighborhoods*
 
 ---
 
