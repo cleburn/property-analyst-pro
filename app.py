@@ -166,6 +166,14 @@ if analyze_button:
             st.warning("⚠️ No neighborhoods match your budget range. Try adjusting the slider.")
             st.stop()
 
+        # Filter by rental type - STR requires Airbnb data
+        if rental_code == "str":
+            df_filtered = df_filtered[df_filtered['listing_count'] > 0]
+            if len(df_filtered) == 0:
+                st.warning("⚠️ No neighborhoods in your budget have STR (Airbnb) data available.")
+                st.info("💡 Try selecting LTR (Long-term rental) instead, or adjust your budget range.")
+                st.stop()
+
         # Recalculate with user inputs
         # Mortgage calculation
         if down_payment_pct == 1.0:

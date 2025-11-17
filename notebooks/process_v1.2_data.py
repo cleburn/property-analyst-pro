@@ -261,10 +261,23 @@ df_housing_merge['neighborhood'] = df_housing_merge['neighborhood'].astype(str)
 df_merged = df_housing_merge.merge(
     airbnb_by_neighborhood,
     on='neighborhood',
-    how='inner'
+    how='left'  # Keep all housing neighborhoods, add STR data where available
 )
 
-print(f"✅ Merged dataset: {len(df_merged)} neighborhoods with complete data")
+# Count neighborhoods with and without STR data
+has_str = df_merged['listing_count'].notna().sum()
+no_str = df_merged['listing_count'].isna().sum()
+
+print(f"✅ Merged dataset: {len(df_merged)} total neighborhoods")
+print(f"   - {has_str} with STR data (7+ Airbnb listings)")
+print(f"   - {no_str} without STR data (LTR/Appreciation only)")
+
+# Fill missing STR data for neighborhoods without Airbnb listings
+df_merged['median_nightly_rate'] = df_merged['median_nightly_rate'].fillna(0)
+df_merged['median_monthly_str_income'] = df_merged['median_monthly_str_income'].fillna(0)
+df_merged['median_bedrooms'] = df_merged['median_bedrooms'].fillna(0)
+df_merged['occupancy_rate'] = df_merged['occupancy_rate'].fillna(0)
+df_merged['listing_count'] = df_merged['listing_count'].fillna(0).astype(int)
 
 # =============================================================================
 # CALCULATE OPERATING EXPENSES (CORRECTED)
