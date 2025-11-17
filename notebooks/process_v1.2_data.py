@@ -50,7 +50,7 @@ REFINANCE_COSTS = 5000
 REFI_CASH_OUT_PCT = 0.80
 
 # --- FILTERING CRITERIA ---
-MIN_AIRBNB_LISTINGS = 10
+MIN_AIRBNB_LISTINGS = 7
 
 print(f"✅ Assumptions loaded")
 print(f"   - Property Tax: {PROPERTY_TAX_RATE*100:.1f}% (CORRECTED from 1.2%)")

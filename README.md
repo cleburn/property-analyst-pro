@@ -87,7 +87,7 @@ The analyzer takes your inputs:
 5. **Hold Period** (Investment timeframe for ROI calculations)
 
 Then it:
-- Filters 45 Austin neighborhoods with complete data to match your budget
+- Analyzes 185 Austin neighborhoods to find the top 5 based on investor criteria and target
 - Ranks them based on your chosen strategy
 - Returns the **top 5 neighborhoods** with comprehensive metrics:
   - Monthly cash flow (STR and LTR with realistic rent estimates)
@@ -140,14 +140,14 @@ Neighborhoods are ranked by the metric that matters most to your strategy:
 - **Total ROI investors:** Sorted by best risk-adjusted returns over hold period
 - **Appreciation investors:** Sorted by strongest weighted historical growth (2000-2025 CAGR)
 
-Only neighborhoods with **10+ Airbnb listings** and **complete data** across all sources are included (ensures reliable analysis).
+Only neighborhoods with **7+ Airbnb listings** and **complete data** across all sources are included (ensures reliable analysis).
 
 ---
 
 ## 📊 Key Insights from Current Data (v1.2)
 
 **Austin Market Reality (as of November 2025):**
-- **Cash Flow is challenging** — With corrected calculations (2.2% property tax + STR expenses), 0/45 neighborhoods show positive monthly cash flow at 20% down / 7% interest
+- **Cash Flow is challenging** — With corrected calculations (2.2% property tax + STR expenses), 0/185 neighborhoods show positive monthly cash flow at 20% down / 7% interest
 - **Total ROI remains attractive** — Despite negative monthly cash flow, many neighborhoods show positive 5-year total ROI when appreciation and equity buildup are included
 - **LTR more viable than STR** — After fixes, LTR shows better cash flow potential than STR in most neighborhoods
 - **Appreciation opportunity exists** — Neighborhoods are 20-30% below their 2022 peaks with median 5.52% weighted CAGR (2000-2025)
@@ -156,7 +156,7 @@ Only neighborhoods with **10+ Airbnb listings** and **complete data** across all
 **Market Stats:**
 - **Median home price:** $541,399
 - **Median weighted appreciation:** 5.52% CAGR (2000-2025)
-- **Neighborhoods analyzed:** 45 with complete data
+- **Neighborhoods analyzed:** 185 Austin neighborhoods
 - **Data through:** October 2025
 
 **Key Takeaway:** v1.2's corrected calculations reveal that Austin real estate is primarily an **appreciation play** with **Total ROI** as the better strategy vs pure cash flow. Short-term cash flow is difficult at current prices and interest rates, but long-term wealth building through appreciation remains strong.
