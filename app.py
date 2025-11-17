@@ -8,7 +8,6 @@ import plotly.graph_objects as go
 # Page configuration
 st.set_page_config(
     page_title="Austin Investment Analyzer v1.2",
-    page_icon="🏠",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -24,10 +23,10 @@ def load_data():
         df = pd.read_csv('data/processed/neighborhoods_v1.2_complete.csv')
         return df
     except FileNotFoundError:
-        st.error("❌ v1.2 data not found. Please run the austin_analyzer_v1.2.ipynb notebook first to generate processed data.")
+        st.error("v1.2 data not found. Please run the austin_analyzer_v1.2.ipynb notebook first to generate processed data.")
         st.stop()
     except Exception as e:
-        st.error(f"❌ Error loading data: {str(e)}")
+        st.error(f"Error loading data: {str(e)}")
         st.stop()
 
 # Load data
@@ -37,16 +36,16 @@ df = load_data()
 # HEADER
 # =============================================================================
 
-st.title("🏠 Austin Real Estate Investment Analyzer v1.2")
+st.title("Austin Real Estate Investment Analyzer v1.2")
 st.markdown("### Comprehensive Investment Strategy Analysis")
-st.markdown("**Analyzed 185 Austin neighborhoods to find your top 5**")
+st.markdown("**Analyzed 66 Austin neighborhoods to find your top 5**")
 st.markdown("---")
 
 # =============================================================================
 # SIDEBAR - USER INPUTS
 # =============================================================================
 
-st.sidebar.header("💼 Investment Parameters")
+st.sidebar.header("Investment Parameters")
 
 # Budget range
 st.sidebar.subheader("Budget Range")
@@ -82,7 +81,7 @@ down_payment_pct = st.sidebar.slider(
 
 # Show cash purchase indicator
 if down_payment_pct == 1.0:
-    st.sidebar.success("💰 Cash Purchase (No Financing)")
+    st.sidebar.success("Cash Purchase (No Financing)")
     interest_rate = 0.0  # No interest for cash purchase
 else:
     interest_rate = st.sidebar.slider(
@@ -138,10 +137,10 @@ with st.sidebar.expander("⚙️ Advanced Assumptions"):
         help="Used to calculate tax benefits from mortgage interest deduction and depreciation"
     ) / 100
 
-    st.info("💡 Appreciation rates are auto-calculated from neighborhood historical data")
+    st.info("Appreciation rates are auto-calculated from neighborhood historical data")
 
 # Analyze button
-analyze_button = st.sidebar.button("🔍 Find Best Neighborhoods", type="primary")
+analyze_button = st.sidebar.button("Find Best Neighborhoods", type="primary")
 
 st.sidebar.markdown("---")
 
@@ -260,20 +259,20 @@ if analyze_button:
         if neighborhood_filter:
             df_filtered = df_filtered[df_filtered['neighborhood'].isin(neighborhood_filter)]
             if len(df_filtered) == 0:
-                st.warning(f"⚠️ None of the selected neighborhoods are in the ${budget_min:,}-${budget_max:,} price range.")
-                st.info(f"💡 Try adjusting your budget or selecting different neighborhoods.")
+                st.warning(f"None of the selected neighborhoods are in the ${budget_min:,}-${budget_max:,} price range.")
+                st.info(f"Try adjusting your budget or selecting different neighborhoods.")
                 st.stop()
 
         if len(df_filtered) == 0:
-            st.warning("⚠️ No neighborhoods match your budget range. Try adjusting the slider.")
+            st.warning("No neighborhoods match your budget range. Try adjusting the slider.")
             st.stop()
 
         # Filter by rental type - STR requires Airbnb data
         if rental_code == "str":
             df_filtered = df_filtered[df_filtered['listing_count'] > 0]
             if len(df_filtered) == 0:
-                st.warning("⚠️ No neighborhoods in your budget have STR (Airbnb) data available.")
-                st.info("💡 Try selecting LTR (Long-term rental) instead, or adjust your budget range.")
+                st.warning("No neighborhoods in your budget have STR (Airbnb) data available.")
+                st.info("Try selecting LTR (Long-term rental) instead, or adjust your budget range.")
                 st.stop()
 
         # Recalculate with user inputs
@@ -452,11 +451,11 @@ if analyze_button:
     df_sorted = df_filtered.sort_values(sort_col, ascending=False)
 
     # Summary metrics
-    st.header("📊 Investment Analysis Summary")
+    st.header("Investment Analysis Summary")
 
     # Show filter status
     if neighborhood_filter:
-        st.info(f"🔍 Filtering to {len(neighborhood_filter)} selected neighborhood(s): {', '.join(neighborhood_filter)}")
+        st.info(f"Filtering to {len(neighborhood_filter)} selected neighborhood(s): {', '.join(neighborhood_filter)}")
 
     col1, col2, col3, col4 = st.columns(4)
 
@@ -480,7 +479,7 @@ if analyze_button:
     st.markdown("---")
 
     # Top 5 neighborhoods
-    st.header(f"🎯 Top 5 Neighborhoods: {strategy}")
+    st.header(f"Top 5 Neighborhoods: {strategy}")
 
     top_5 = df_sorted.head(5)
 
@@ -490,7 +489,7 @@ if analyze_button:
         with st.expander(f"#{rank} - {row['neighborhood']}", expanded=(rank <= 3)):
 
             # Zillow link
-            st.markdown(f"🔍 **[Search Zillow for {row['neighborhood']}](https://www.zillow.com/austin-tx/{row['neighborhood'].replace(' ', '-').lower()}/)** ")
+            st.markdown(f"**[Search Zillow for {row['neighborhood']}](https://www.zillow.com/austin-tx/{row['neighborhood'].replace(' ', '-').lower()}/)** ")
 
             # Key metrics
             col1, col2, col3, col4 = st.columns(4)
@@ -529,7 +528,7 @@ if analyze_button:
             col1, col2, col3 = st.columns(3)
 
             with col1:
-                st.markdown("**💰 Monthly Income:**")
+                st.markdown("**Monthly Income:**")
                 st.write(f"Rental Income ({rental_code.upper()}): ${row[income_col]:,.0f}")
                 if rental_code == "str":
                     st.write(f"Occupancy Rate: {row['occupancy_rate']:.1f}%")
@@ -539,7 +538,7 @@ if analyze_button:
                     st.caption(f"Rents estimated at {row['calc_ltr_rent_pct']} of home value")
 
             with col2:
-                st.markdown("**📉 Monthly Costs:**")
+                st.markdown("**Monthly Costs:**")
                 if down_payment_pct == 1.0:
                     st.write(f"Mortgage: $0 (Cash Purchase)")
                 else:
@@ -552,7 +551,7 @@ if analyze_button:
                 st.write(f"**TOTAL: ${row['calc_total_costs']:,.0f}**")
 
             with col3:
-                st.markdown("**💵 Tax Benefits (Year 1):**")
+                st.markdown("**Tax Benefits (Year 1):**")
                 st.write(f"Mortgage Interest: ${row['calc_mortgage_interest']:,.0f}")
                 st.write(f"Depreciation: ${row['calc_depreciation']:,.0f}")
                 st.write(f"Operating Expenses: ${row['calc_annual_operating_expenses']:,.0f}")
@@ -566,23 +565,23 @@ if analyze_button:
             col1, col2, col3 = st.columns(3)
 
             with col1:
-                st.markdown("**📊 Pre-Tax vs After-Tax:**")
+                st.markdown("**Pre-Tax vs After-Tax:**")
                 st.write(f"Pre-Tax Cash Flow: ${row['calc_monthly_cf']:,.0f}/mo")
                 st.write(f"After-Tax Cash Flow: ${row['calc_monthly_cf_after_tax']:,.0f}/mo")
                 st.write(f"**Tax Benefit: ${row['calc_monthly_cf_after_tax'] - row['calc_monthly_cf']:,.0f}/mo**")
 
             with col2:
-                st.markdown("**📈 Investment Summary:**")
+                st.markdown("**Investment Summary:**")
                 down = row['current_price'] * down_payment_pct
                 if down_payment_pct == 1.0:
-                    st.write(f"💰 Cash Purchase: ${down:,.0f}")
+                    st.write(f"Cash Purchase: ${down:,.0f}")
                 else:
                     st.write(f"Down Payment ({down_payment_pct*100:.0f}%): ${down:,.0f}")
                 st.write(f"Est. Closing Costs: ${row['current_price']*0.03:,.0f}")
                 st.write(f"**Total Initial Investment: ${down + row['current_price']*0.03:,.0f}**")
 
             with col3:
-                st.markdown("**🏘️ Property Details:**")
+                st.markdown("**Property Details:**")
                 st.write(f"Historical Appreciation: {row['baseline_cagr']:.2f}%/yr")
                 st.write(f"Bedrooms (median): {row['median_bedrooms']:.0f}")
                 st.write(f"Distance from '22 Peak: {row['distance_from_peak']:.1f}%")
@@ -590,7 +589,7 @@ if analyze_button:
             st.markdown("---")
 
             # Exit Strategy Analysis (Sell vs Refi)
-            st.markdown(f"**🚪 Exit Strategy (After {int(hold_period)} Years, based on your selected entry strategy):**")
+            st.markdown(f"**Exit Strategy (After {int(hold_period)} Years, based on your selected entry strategy):**")
             col1, col2 = st.columns(2)
 
             # Calculate future property value
@@ -626,7 +625,7 @@ if analyze_button:
                 future_effective_rent = row['median_monthly_str_income']  # Already has occupancy applied
 
             with col1:
-                st.markdown("*💰 Sell (w/ Cap Gains Tax):*")
+                st.markdown("*Sell (w/ Cap Gains Tax):*")
                 # Long-term cap gains tax (15% for most investors)
                 # Note: Investment property, no primary residence exclusion
                 cap_gains_tax = appreciation_gain * 0.15
@@ -644,7 +643,7 @@ if analyze_button:
                 st.write(f"**Net Proceeds: ${net_proceeds:,.0f}**")
 
             with col2:
-                st.markdown("*🔄 Cash-Out Refi (80% LTV):*")
+                st.markdown("*Cash-Out Refi (80% LTV):*")
 
                 # Industry standard: 80% loan-to-value on future property value
                 refi_closing_costs = 5000
@@ -684,7 +683,7 @@ if analyze_button:
     st.markdown("---")
 
     # Visualization
-    st.header("📊 Visual Analysis")
+    st.header("Visual Analysis")
 
     # Create comparison chart
     top_10 = df_sorted.head(10)
@@ -747,27 +746,7 @@ if analyze_button:
 
 else:
     # Initial state
-    st.info("👈 **Configure your investment parameters in the sidebar and click 'Find Best Neighborhoods'**")
-
-    # Show sample data
-    st.header("📊 Dataset Overview")
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        st.metric("Total Neighborhoods", f"{len(df):,}")
-
-    with col2:
-        st.metric("Price Range", f"${df['current_price'].min():,.0f} - ${df['current_price'].max():,.0f}")
-
-    with col3:
-        st.metric("Data Through", "October 2025")
-
-    # Sample neighborhoods
-    st.subheader("Sample Neighborhoods")
-    sample = df.sample(5)[['neighborhood', 'current_price', 'baseline_cagr', 'listing_count', 'occupancy_rate']]
-    sample.columns = ['Neighborhood', 'Current Price', 'Historical CAGR (%)', 'Airbnb Listings', 'Occupancy Rate (%)']
-    st.dataframe(sample, use_container_width=True)
+    st.info("Configure your investment parameters in the sidebar and click 'Find Best Neighborhoods'")
 
 # Footer
 st.markdown("---")

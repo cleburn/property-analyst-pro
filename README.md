@@ -88,7 +88,7 @@ The analyzer takes your inputs:
 5. **Hold Period** (Investment timeframe for ROI calculations)
 
 Then it:
-- Analyzes 185 Austin neighborhoods to find the top 5 based on investor criteria and target
+- Analyzes 66 Austin neighborhoods to find the top 5 based on investor criteria and target
 - Ranks them based on your chosen strategy
 - Returns the **top 5 neighborhoods** with comprehensive metrics:
   - Monthly cash flow (STR and LTR with realistic rent estimates)
@@ -164,7 +164,7 @@ Only neighborhoods with **7+ Airbnb listings** and **complete data** across all 
 **Market Stats:**
 - **Median home price:** $541,399
 - **Median weighted appreciation:** 5.52% CAGR (2000-2025)
-- **Neighborhoods analyzed:** 185 Austin neighborhoods
+- **Neighborhoods analyzed:** 66 Austin neighborhoods
 - **Data through:** October 2025
 
 **Key Takeaway:** v1.2's corrected calculations reveal that Austin real estate offers strong returns when tax benefits are included. While pre-tax cash flow can be challenging at current prices, **after-tax cash flow combined with appreciation** makes Austin an attractive market for buy-and-hold investors who can benefit from rental property tax advantages.
