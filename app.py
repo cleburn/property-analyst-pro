@@ -37,8 +37,6 @@ df = load_data()
 # =============================================================================
 
 st.title("Austin Real Estate Investment Analyzer v1.2")
-st.markdown("### Comprehensive Investment Strategy Analysis")
-st.markdown("**Analyzed 66 Austin neighborhoods to find your top 5**")
 st.markdown("---")
 
 # =============================================================================
