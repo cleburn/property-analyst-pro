@@ -752,19 +752,19 @@ st.markdown("---")
 with st.expander("🔍 What's New in v1.2?"):
     st.markdown("""
     **Critical Fixes:**
-    - ✅ **Property Tax Rate:** Corrected from 1.2% to 2.2% (Austin actual)
-    - ✅ **STR Operating Expenses:** Added utilities ($200/mo), cleaning (~$300/mo), supplies ($75/mo), platform fees (3%)
-    - ✅ **Total Impact:** ~$700/month correction in cash flow calculations
+    -  **Property Tax Rate:** Corrected from 1.2% to 2.2% (Austin actual)
+    -  **STR Operating Expenses:** Added utilities ($200/mo), cleaning (~$300/mo), supplies ($75/mo), platform fees (3%)
+    -  **Total Impact:** ~$700/month correction in cash flow calculations
 
     **New Features:**
-    - 🎯 **3 Primary Investment Strategies:** Cash Flow, Total ROI, Appreciation
-    - 🔑 **Entry/Exit Analysis:** Detailed comparisons in results (Cash vs Financed, Sell vs Refi)
-    - ⚙️ **User-Adjustable Assumptions:** Customize all parameters to your situation
-    - 💰 **100% Cash Purchase Option:** Compare cash vs financed scenarios
-    - 🏘️ **Neighborhood Filter:** Select specific neighborhoods to analyze
-    - 📊 **Price-Tier LTR Rents:** Realistic rent estimates based on home value
-    - 📈 **Rental Growth Modeling:** LTR rents increase 3-5% annually
-    - 🎨 **Interactive Visualizations:** Dynamic charts with Plotly
+    -  **3 Primary Investment Strategies:** Cash Flow, Total ROI, Appreciation
+    -  **Entry/Exit Analysis:** Detailed comparisons in results (Cash vs Financed, Sell vs Refi)
+    -  **User-Adjustable Assumptions:** Customize all parameters to your situation
+    -  **100% Cash Purchase Option:** Compare cash vs financed scenarios
+    -  **Neighborhood Filter:** Select specific neighborhoods to analyze
+    -  **Price-Tier LTR Rents:** Realistic rent estimates based on home value
+    -  **Rental Growth Modeling:** LTR rents increase 3-5% annually
+    -  **Interactive Visualizations:** Dynamic charts with Plotly
     """)
 
 st.markdown("""
