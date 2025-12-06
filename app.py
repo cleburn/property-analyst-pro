@@ -2,15 +2,29 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from datetime import datetime
+from pathlib import Path
+import sys
 import plotly.express as px
 import plotly.graph_objects as go
 
+# Add project root to path for config imports
+sys.path.insert(0, str(Path(__file__).parent))
+
+from config.metro_config import get_config_loader, get_metro_config
+
 # Page configuration
 st.set_page_config(
-    page_title="Austin Investment Analyzer v1.2",
+    page_title="Real Estate Investment Analyzer v2.0",
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# =============================================================================
+# CONFIGURATION
+# =============================================================================
+
+# Load metro configuration
+config_loader = get_config_loader()
 
 # =============================================================================
 # DATA LOADING
@@ -18,25 +32,144 @@ st.set_page_config(
 
 @st.cache_data
 def load_data():
-    """Load v1.2 processed data"""
+    """Load multi-metro processed data"""
+    # Try new multi-metro file first, fall back to legacy
     try:
-        df = pd.read_csv('data/processed/neighborhoods_v1.2_complete.csv')
+        df = pd.read_csv('data/processed/neighborhoods_multi_metro.csv')
         return df
     except FileNotFoundError:
-        st.error("v1.2 data not found. Please run the austin_analyzer_v1.2.ipynb notebook first to generate processed data.")
-        st.stop()
+        try:
+            # Fall back to legacy Austin-only file
+            df = pd.read_csv('data/processed/neighborhoods_v1.2_complete.csv')
+            # Add metro columns for backward compatibility
+            if 'metro' not in df.columns:
+                df['metro'] = 'austin'
+                df['metro_display'] = 'Austin, TX'
+                df['state'] = 'TX'
+                df['has_str_data'] = True
+            return df
+        except FileNotFoundError:
+            st.error("Data not found. Please run process_data.py first to generate processed data.")
+            st.stop()
     except Exception as e:
         st.error(f"Error loading data: {str(e)}")
         st.stop()
 
-# Load data
-df = load_data()
+# Load all data once
+df_all = load_data()
+
+# =============================================================================
+# LOCATION SELECTION (Top of sidebar) - State filter → Multi-select metros
+# =============================================================================
+
+st.sidebar.header("Location Selection")
+
+# Get available metros from data
+available_metros = df_all['metro'].unique().tolist()
+metro_options = {m: config_loader.get_metro(m).display_name for m in available_metros if m in config_loader.list_metros()}
+
+# Build state groupings from available metros
+available_states = {}
+for metro_key in metro_options.keys():
+    state = config_loader.get_metro(metro_key).state
+    if state not in available_states:
+        available_states[state] = []
+    available_states[state].append(metro_key)
+
+# State display names
+state_names = {
+    'TX': 'Texas',
+    'FL': 'Florida'
+}
+
+# State selection (All States / Florida / Texas)
+state_options = ['All States'] + sorted([state_names.get(s, s) for s in available_states.keys()])
+selected_state = st.sidebar.selectbox(
+    "State",
+    options=state_options,
+    index=0,
+    help="Filter by state or view all states"
+)
+
+# Determine which metros to show based on state selection
+if selected_state == 'All States':
+    filtered_metro_keys = list(metro_options.keys())
+    filtered_state_codes = list(available_states.keys())
+else:
+    # Convert display name back to state code
+    state_code = [k for k, v in state_names.items() if v == selected_state][0]
+    filtered_metro_keys = available_states.get(state_code, [])
+    filtered_state_codes = [state_code]
+
+# Sort metros alphabetically by display name
+sorted_metro_keys = sorted(filtered_metro_keys, key=lambda x: metro_options[x])
+
+# Metro multi-select (empty = all metros in selected state)
+selected_metros = st.sidebar.multiselect(
+    "Metro Areas (leave empty for all)",
+    options=sorted_metro_keys,
+    format_func=lambda x: metro_options[x],
+    default=[],
+    help="Select specific metros or leave empty to include all"
+)
+
+# If no metros selected, use all metros from the filtered state
+if not selected_metros:
+    selected_metros = filtered_metro_keys
+
+# Filter data for selected metros
+df = df_all[df_all['metro'].isin(selected_metros)].copy()
+
+if len(df) == 0:
+    st.error("No data available for the selected location(s). Please check that data has been processed.")
+    st.stop()
+
+# Determine STR availability across selected metros
+selected_configs = [get_metro_config(m) for m in selected_metros]
+any_has_str = any(c.has_str_data for c in selected_configs)
+all_have_str = all(c.has_str_data for c in selected_configs)
+
+# For single metro, use its config; for multiple, we'll use aggregated settings
+if len(selected_metros) == 1:
+    metro_config = selected_configs[0]
+    is_multi_metro = False
+else:
+    # Create a "virtual" config for display purposes - use first metro as base
+    metro_config = selected_configs[0]
+    is_multi_metro = True
+
+# Show selection summary
+if is_multi_metro:
+    st.sidebar.caption(f"Analyzing {len(selected_metros)} metros, {len(df)} neighborhoods")
+else:
+    cities_in_metro = metro_config.get_zillow_cities()
+    if len(cities_in_metro) > 1:
+        st.sidebar.caption(f"Includes: {', '.join(cities_in_metro[:5])}{'...' if len(cities_in_metro) > 5 else ''}")
+
+# Show STR availability status
+if not any_has_str:
+    st.sidebar.warning("STR (Airbnb) data is not available for the selected location(s). Only LTR analysis is available.")
+elif not all_have_str and is_multi_metro:
+    str_metros = [c.display_name for c in selected_configs if c.has_str_data]
+    st.sidebar.info(f"STR data available for: {', '.join(str_metros)}")
+
+st.sidebar.markdown("---")
 
 # =============================================================================
 # HEADER
 # =============================================================================
 
-st.title("Austin Real Estate Investment Analyzer v1.2")
+# Dynamic title based on selection
+if is_multi_metro:
+    if selected_state == 'All States':
+        title_location = "Multi-State"
+    else:
+        title_location = selected_state
+    st.title(f"{title_location} Real Estate Investment Analyzer")
+    st.caption(f"v2.0 - Analyzing {len(selected_metros)} metros, {len(df)} neighborhoods")
+else:
+    st.title(f"{metro_config.display_name} Real Estate Investment Analyzer")
+    st.caption("v2.0 - Multi-Metro Edition")
 st.markdown("---")
 
 # =============================================================================
@@ -49,9 +182,9 @@ st.sidebar.header("Investment Parameters")
 st.sidebar.subheader("Budget Range")
 budget_min, budget_max = st.sidebar.slider(
     "Property Price Range",
-    min_value=150000,
-    max_value=800000,
-    value=(250000, 400000),
+    min_value=50000,
+    max_value=1000000,
+    value=(100000, 500000),
     step=10000,
     format="$%d"
 )
@@ -99,19 +232,64 @@ strategy = st.sidebar.selectbox(
      "Appreciation Potential"]
 )
 
-# Rental Type
-rental_type = st.sidebar.radio(
-    "Rental Type",
-    ["Short-Term Rental (STR/Airbnb)", "Long-Term Rental (LTR)"]
-)
-rental_code = "str" if "Short-Term" in rental_type else "ltr"
+# Rental Type - conditionally show based on STR data availability
+if any_has_str:
+    rental_type = st.sidebar.radio(
+        "Rental Type",
+        ["Short-Term Rental (STR/Airbnb)", "Long-Term Rental (LTR)"]
+    )
+    rental_code = "str" if "Short-Term" in rental_type else "ltr"
+    # Note about partial STR coverage in multi-metro
+    if is_multi_metro and not all_have_str and rental_code == "str":
+        st.sidebar.caption("Note: STR data only available for some selected metros. Others will be excluded from STR results.")
+else:
+    st.sidebar.info("Only LTR analysis available for selected location(s) (no Airbnb data)")
+    rental_type = "Long-Term Rental (LTR)"
+    rental_code = "ltr"
 
 # LTR rent calculation info now shown in results section
 
 # Advanced assumptions
 with st.sidebar.expander("⚙️ Advanced Assumptions"):
-    property_tax = st.number_input("Property Tax Rate %", value=2.2, min_value=0.5, max_value=4.0, step=0.1) / 100
-    insurance = st.number_input("Insurance Rate %", value=0.5, min_value=0.3, max_value=2.0, step=0.1) / 100
+    if is_multi_metro:
+        # Multi-metro mode: use pre-calculated values, just show info
+        st.caption("Using pre-calculated metro-specific rates for tax, insurance, and rent estimates.")
+        st.markdown("""
+        **Rates by metro are applied automatically:**
+        - Property tax: 1.6% - 2.4% depending on metro
+        - Insurance: 0.5% - 1.2% depending on metro
+        """)
+        # Set default values (won't be used for main calculations - pre-calculated data is used)
+        # But needed for any fallback calculations that reference these variables
+        property_tax = 0.022  # Average fallback
+        insurance = 0.008  # Average fallback
+    else:
+        # Single metro: allow override
+        default_tax = metro_config.property_tax_rate * 100
+        default_insurance = metro_config.insurance_rate * 100
+
+        property_tax = st.number_input(
+            "Property Tax Rate %",
+            value=default_tax,
+            min_value=0.5,
+            max_value=4.0,
+            step=0.1,
+            help=metro_config.property_tax_note if metro_config.property_tax_note else None
+        ) / 100
+
+        # Show Florida property tax note if applicable
+        if metro_config.property_tax_note:
+            st.caption(f"Note: {metro_config.property_tax_note}")
+
+        insurance = st.number_input(
+            "Insurance Rate %",
+            value=default_insurance,
+            min_value=0.3,
+            max_value=3.0,  # Higher max for Florida
+            step=0.1,
+            help="Varies by location. Florida/coastal areas typically higher due to hurricane risk."
+        ) / 100
+
     maintenance = st.number_input("Maintenance Rate %", value=1.0, min_value=0.5, max_value=3.0, step=0.1) / 100
 
     if rental_code == "str":
@@ -166,18 +344,24 @@ def calculate_mortgage_interest(loan_amount, interest_rate, year):
     total_payments = 30 * 12
     monthly_payment = loan_amount * (monthly_rate * (1 + monthly_rate)**total_payments) / ((1 + monthly_rate)**total_payments - 1)
 
-    # Calculate interest for each month of the year
-    annual_interest = 0
     remaining_balance = loan_amount
-
     start_month = (year - 1) * 12
     end_month = year * 12
 
+    # First, iterate through prior months to get correct starting balance
+    for month in range(0, start_month):
+        if month >= total_payments:
+            break
+        monthly_interest = remaining_balance * monthly_rate
+        monthly_principal = monthly_payment - monthly_interest
+        remaining_balance -= monthly_principal
+
+    # Now calculate interest for the target year
+    annual_interest = 0
     for month in range(start_month, end_month):
         if month >= total_payments:
             break
 
-        # Interest for this month
         monthly_interest = remaining_balance * monthly_rate
         monthly_principal = monthly_payment - monthly_interest
 
@@ -291,8 +475,14 @@ if analyze_button:
             )
 
         # Operating expenses
-        df_filtered['calc_property_tax'] = df_filtered['current_price'] * property_tax / 12
-        df_filtered['calc_insurance'] = df_filtered['current_price'] * insurance / 12
+        if is_multi_metro:
+            # Use pre-calculated values from data (metro-specific rates already applied)
+            df_filtered['calc_property_tax'] = df_filtered['monthly_property_tax']
+            df_filtered['calc_insurance'] = df_filtered['monthly_insurance']
+        else:
+            # Single metro - use user-specified or default rates
+            df_filtered['calc_property_tax'] = df_filtered['current_price'] * property_tax / 12
+            df_filtered['calc_insurance'] = df_filtered['current_price'] * insurance / 12
         df_filtered['calc_maintenance'] = df_filtered['current_price'] * maintenance / 12
 
         df_filtered['calc_base_costs'] = (
@@ -320,31 +510,16 @@ if analyze_button:
             df_filtered['calc_monthly_cf'] = df_filtered['median_monthly_str_income'] - df_filtered['calc_total_costs']
             income_col = 'median_monthly_str_income'
         else:
-            # LTR - use price-tier method for realistic SFH rents
-            def calc_ltr_rent_tier(price):
-                """Price-tier: <$300k=0.80%, $300-500k=0.65%, $500-700k=0.60%, >$700k=0.65%"""
-                if price < 300000:
-                    return price * 0.0080
-                elif price < 500000:
-                    return price * 0.0065
-                elif price < 700000:
-                    return price * 0.0060
-                else:
-                    return price * 0.0065
-
-            def get_ltr_rent_percentage(price):
-                """Get the percentage text for LTR rent calculation"""
-                if price < 300000:
-                    return "0.80%"
-                elif price < 500000:
-                    return "0.65%"
-                elif price < 700000:
-                    return "0.60%"
-                else:
-                    return "0.65%"
-
-            df_filtered['calc_ltr_rent'] = df_filtered['current_price'].apply(calc_ltr_rent_tier)
-            df_filtered['calc_ltr_rent_pct'] = df_filtered['current_price'].apply(get_ltr_rent_percentage)
+            # LTR - use metro-specific price-tier method for realistic SFH rents
+            if is_multi_metro:
+                # Use pre-calculated LTR rent from data (metro-specific tiers already applied)
+                df_filtered['calc_ltr_rent'] = df_filtered['estimated_ltr_rent']
+                # Calculate rent-to-price ratio for display
+                df_filtered['calc_ltr_rent_pct'] = (df_filtered['calc_ltr_rent'] / df_filtered['current_price'] * 100).apply(lambda x: f"{x:.2f}%")
+            else:
+                # Single metro - use metro config to calculate
+                df_filtered['calc_ltr_rent'] = df_filtered['current_price'].apply(metro_config.calculate_ltr_rent)
+                df_filtered['calc_ltr_rent_pct'] = df_filtered['current_price'].apply(metro_config.get_ltr_rate_display)
             df_filtered['calc_ltr_effective_rent'] = df_filtered['calc_ltr_rent'] * 0.92  # 8% vacancy
             df_filtered['calc_total_costs'] = df_filtered['calc_base_costs']
             df_filtered['calc_monthly_cf'] = df_filtered['calc_ltr_effective_rent'] - df_filtered['calc_total_costs']
@@ -422,14 +597,23 @@ if analyze_button:
         future_value = df_filtered['current_price'] * ((1 + annual_appreciation) ** hold_period)
         appreciation_gain = future_value - df_filtered['current_price']
 
-        # Principal paydown (approximation)
+        # Principal paydown (actual amortization calculation)
         if down_payment_pct == 1.0:
             # Cash purchase - no principal paydown
             principal_paydown = 0
         else:
-            # Financed - estimate principal paid down
+            # Financed - calculate actual principal paid using amortization formula
             loan_amount = df_filtered['current_price'] * (1 - down_payment_pct)
-            principal_paydown = loan_amount * 0.15 * (hold_period / 5)
+            monthly_rate = interest_rate / 12
+            total_payments = 30 * 12  # 360 months
+            payments_made = int(hold_period) * 12
+
+            # Remaining balance after hold_period years
+            remaining_balance = loan_amount * (
+                ((1 + monthly_rate)**total_payments - (1 + monthly_rate)**payments_made) /
+                ((1 + monthly_rate)**total_payments - 1)
+            )
+            principal_paydown = loan_amount - remaining_balance
 
         total_return = cumulative_cf + appreciation_gain + principal_paydown
         df_filtered['calc_total_roi'] = (total_return / total_invested) * 100
@@ -484,10 +668,20 @@ if analyze_button:
     for idx, row in top_5.iterrows():
         rank = top_5.index.get_loc(idx) + 1
 
-        with st.expander(f"#{rank} - {row['neighborhood']}", expanded=(rank <= 3)):
+        # Include metro name in title for multi-metro mode
+        if is_multi_metro:
+            expander_title = f"#{rank} - {row['neighborhood']} ({row['metro_display']})"
+        else:
+            expander_title = f"#{rank} - {row['neighborhood']}"
 
-            # Zillow link
-            st.markdown(f"**[Search Zillow for {row['neighborhood']}](https://www.zillow.com/austin-tx/{row['neighborhood'].replace(' ', '-').lower()}/)** ")
+        with st.expander(expander_title, expanded=(rank <= 3)):
+
+            # Zillow link - use the specific metro's URL template
+            row_metro_config = get_metro_config(row['metro'])
+            zillow_url = row_metro_config.zillow_search_url.format(
+                neighborhood=row['neighborhood'].replace(' ', '-').lower()
+            )
+            st.markdown(f"**[Search Zillow for {row['neighborhood']}]({zillow_url})** ")
 
             # Key metrics
             col1, col2, col3, col4 = st.columns(4)
@@ -541,8 +735,15 @@ if analyze_button:
                     st.write(f"Mortgage: $0 (Cash Purchase)")
                 else:
                     st.write(f"Mortgage (P&I): ${row['calc_monthly_mortgage']:,.0f}")
-                st.write(f"Property Tax ({property_tax*100:.1f}%): ${row['calc_property_tax']:,.0f}")
-                st.write(f"Insurance ({insurance*100:.1f}%): ${row['calc_insurance']:,.0f}")
+                # Show rates - calculate from values in multi-metro mode
+                if is_multi_metro:
+                    tax_rate_display = row['calc_property_tax'] * 12 / row['current_price'] * 100
+                    ins_rate_display = row['calc_insurance'] * 12 / row['current_price'] * 100
+                else:
+                    tax_rate_display = property_tax * 100
+                    ins_rate_display = insurance * 100
+                st.write(f"Property Tax ({tax_rate_display:.1f}%): ${row['calc_property_tax']:,.0f}")
+                st.write(f"Insurance ({ins_rate_display:.1f}%): ${row['calc_insurance']:,.0f}")
                 st.write(f"Maintenance ({maintenance*100:.1f}%): ${row['calc_maintenance']:,.0f}")
                 if rental_code == "str":
                     st.write(f"STR Operating Costs: ${row['calc_str_additional']:,.0f}")
@@ -664,9 +865,16 @@ if analyze_button:
                 new_mortgage = new_loan_amount * (monthly_refi_rate * (1 + monthly_refi_rate)**n_payments) / ((1 + monthly_refi_rate)**n_payments - 1)
 
                 # New cash flow with updated rent and new mortgage
+                # For multi-metro, calculate rates from current values; for single metro use user rates
+                if is_multi_metro:
+                    future_tax = row['calc_property_tax'] * (future_value / row['current_price'])
+                    future_ins = row['calc_insurance'] * (future_value / row['current_price'])
+                else:
+                    future_tax = future_value * property_tax / 12
+                    future_ins = future_value * insurance / 12
                 new_monthly_costs = (new_mortgage +
-                                   (future_value * property_tax / 12) +
-                                   (future_value * insurance / 12) +
+                                   future_tax +
+                                   future_ins +
                                    (future_value * maintenance / 12) +
                                    (row['calc_str_additional'] if rental_code == "str" else 0))
                 new_cash_flow = future_effective_rent - new_monthly_costs
@@ -749,26 +957,31 @@ else:
 # Footer
 st.markdown("---")
 
-with st.expander("🔍 What's New in v1.2?"):
+with st.expander("What's New in v2.0?"):
     st.markdown("""
-    **Critical Fixes:**
-    -  **Property Tax Rate:** Corrected from 1.2% to 2.2% (Austin actual)
-    -  **STR Operating Expenses:** Added utilities ($200/mo), cleaning (~$300/mo), supplies ($75/mo), platform fees (3%)
-    -  **Total Impact:** ~$700/month correction in cash flow calculations
+    **v2.0 - Multi-Metro Edition:**
+    - **Multiple Metro Areas:** Analyze real estate investments across Texas and Florida
+    - **Metro-Specific Defaults:** Property tax rates, insurance rates, and LTR rent tiers customized per market
+    - **Enhanced STR Filtering:** Improved outlier detection removes hotel rooms and statistical anomalies
+    - **Corrected Principal Paydown:** Uses actual amortization formula (was overstated in v1.x)
 
-    **New Features:**
-    -  **3 Primary Investment Strategies:** Cash Flow, Total ROI, Appreciation
-    -  **Entry/Exit Analysis:** Detailed comparisons in results (Cash vs Financed, Sell vs Refi)
-    -  **User-Adjustable Assumptions:** Customize all parameters to your situation
-    -  **100% Cash Purchase Option:** Compare cash vs financed scenarios
-    -  **Neighborhood Filter:** Select specific neighborhoods to analyze
-    -  **Price-Tier LTR Rents:** Realistic rent estimates based on home value
-    -  **Rental Growth Modeling:** LTR rents increase 3-5% annually
-    -  **Interactive Visualizations:** Dynamic charts with Plotly
+    **Previous Fixes (v1.2):**
+    - Property Tax Rate: Corrected from 1.2% to 2.2% (Austin actual)
+    - STR Operating Expenses: Added utilities, cleaning, supplies, platform fees
+    - 3 Primary Investment Strategies: Cash Flow, Total ROI, Appreciation
+    - Exit Strategy Analysis: Sell vs Refinance comparisons
     """)
+
+# Show current selection info
+if is_multi_metro:
+    metro_names = [get_metro_config(m).display_name for m in selected_metros]
+    str_status = f"{sum(1 for c in selected_configs if c.has_str_data)}/{len(selected_metros)} metros have STR data"
+    st.caption(f"Currently viewing: {len(selected_metros)} metros ({', '.join(metro_names[:3])}{'...' if len(metro_names) > 3 else ''}) | {str_status}")
+else:
+    st.caption(f"Currently viewing: {metro_config.display_name} | STR Data: {'Available' if metro_config.has_str_data else 'Not Available'}")
 
 st.markdown("""
 **Created by:** [Cleburn Walker](https://linkedin.com/in/cleburnwalker) | [GitHub](https://github.com/cleburn)
 
-**Data Sources:** Zillow ZHVI (Housing Prices), Zillow ZORI (Rent Prices), Inside Airbnb (through June 2025)
+**Data Sources:** Zillow ZHVI (Housing Prices), Zillow ZORI (Rent Prices), Inside Airbnb
 """)

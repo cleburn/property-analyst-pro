@@ -26,10 +26,12 @@ notebooks/anaconda_projects/
 
 # --- Data files ---
 data/raw/
-data/processed/
-*.csv
 *.xlsx
 *.gz
+
+# Processed data - exclude all except the multi-metro output
+data/processed/*
+!data/processed/neighborhoods_multi_metro.csv
 
 # --- System / IDE ---
 .vscode/

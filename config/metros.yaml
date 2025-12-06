@@ -1,0 +1,354 @@
+# Metro area configuration for Investment Analyzer v2.0
+# Last updated: December 2025
+
+version: "2.0"
+default_metro: "austin"
+
+metros:
+  # ============================================
+  # TEXAS METROS
+  # ============================================
+
+  austin:
+    display_name: "Austin, TX"
+    state: "TX"
+    zillow_city: "Austin"
+    zillow_metro: "Austin-Round Rock-Georgetown, TX"
+    has_str_data: true
+    airbnb_file: "airbnb_austin.csv.gz"
+
+    # Financial defaults (validated Nov 2025)
+    property_tax_rate: 0.022  # 2.2% - Travis County
+    insurance_rate: 0.005     # 0.5%
+
+    # LTR rent-to-price tiers (Austin validated Nov 2025)
+    ltr_tiers:
+      - max_price: 300000
+        rate: 0.0080  # 0.80%
+      - max_price: 500000
+        rate: 0.0065  # 0.65%
+      - max_price: 700000
+        rate: 0.0060  # 0.60%
+      - max_price: null  # No upper limit
+        rate: 0.0065  # 0.65%
+
+    zillow_search_url: "https://www.zillow.com/austin-tx/{neighborhood}/"
+
+  houston:
+    display_name: "Houston Metro, TX"
+    state: "TX"
+    zillow_city: "Houston"
+    zillow_cities:  # Include popular suburbs
+      - Houston
+      - Sugar Land
+      - Katy
+      - Missouri City
+      - Pearland
+      - Spring
+      - Cypress
+      - Conroe
+      - League City
+      - Tomball
+      - Friendswood
+      - Richmond
+      - Atascocita
+      - Cinco Ranch
+    zillow_metro: "Houston-The Woodlands-Sugar Land, TX"
+    has_str_data: false
+    airbnb_file: null
+
+    property_tax_rate: 0.023  # 2.3% - Harris County average
+    insurance_rate: 0.007     # Higher due to flood risk
+
+    ltr_tiers:
+      - max_price: 250000
+        rate: 0.0085  # 0.85%
+      - max_price: 400000
+        rate: 0.0070  # 0.70%
+      - max_price: 600000
+        rate: 0.0060  # 0.60%
+      - max_price: null
+        rate: 0.0055  # 0.55%
+
+    zillow_search_url: "https://www.zillow.com/houston-tx/{neighborhood}/"
+
+  dallas:
+    display_name: "Dallas Metro, TX"
+    state: "TX"
+    zillow_city: "Dallas"
+    zillow_cities:  # Include DFW suburbs (Dallas side)
+      - Dallas
+      - Plano
+      - Garland
+      - Irving
+      - Richardson
+      - Carrollton
+      - Lewisville
+      - Allen
+      - McKinney
+      - Frisco
+      - Flower Mound
+      - Grapevine
+      - Grand Prairie
+      - Mesquite
+      - Wylie
+      - Rockwall
+      - Prosper
+      - Little Elm
+      - Murphy
+      - Highland Village
+      - Southlake
+      - Denton
+      - Forney
+    zillow_metro: "Dallas-Fort Worth-Arlington, TX"
+    has_str_data: true
+    airbnb_file: "airbnb_dallas.csv.gz"
+
+    property_tax_rate: 0.024  # 2.4% - Dallas County
+    insurance_rate: 0.005
+
+    ltr_tiers:
+      - max_price: 300000
+        rate: 0.0080  # 0.80%
+      - max_price: 500000
+        rate: 0.0065  # 0.65%
+      - max_price: 700000
+        rate: 0.0058  # 0.58%
+      - max_price: null
+        rate: 0.0055  # 0.55%
+
+    zillow_search_url: "https://www.zillow.com/dallas-tx/{neighborhood}/"
+
+  san_antonio:
+    display_name: "San Antonio, TX"
+    state: "TX"
+    zillow_city: "San Antonio"
+    zillow_metro: "San Antonio-New Braunfels, TX"
+    has_str_data: false
+    airbnb_file: null
+
+    property_tax_rate: 0.022  # 2.2% - Bexar County
+    insurance_rate: 0.005
+
+    ltr_tiers:
+      - max_price: 250000
+        rate: 0.0085  # 0.85%
+      - max_price: 400000
+        rate: 0.0070  # 0.70%
+      - max_price: 550000
+        rate: 0.0060  # 0.60%
+      - max_price: null
+        rate: 0.0055  # 0.55%
+
+    zillow_search_url: "https://www.zillow.com/san-antonio-tx/{neighborhood}/"
+
+  fort_worth:
+    display_name: "Fort Worth Metro, TX"
+    state: "TX"
+    zillow_city: "Fort Worth"
+    zillow_cities:  # Include DFW suburbs (Fort Worth side)
+      - Fort Worth
+      - Arlington
+      - Keller
+      - Watauga
+      - North Richland Hills
+      - Bedford
+      - Hurst
+      - Burleson
+      - Mansfield
+      - Benbrook
+      - Saginaw
+      - Haltom City
+      - Azle
+      - Weatherford
+      - Midlothian
+      - Waxahachie
+      - Corinth
+    zillow_metro: "Dallas-Fort Worth-Arlington, TX"
+    has_str_data: true
+    airbnb_file: "airbnb_fort_worth.csv.gz"
+
+    property_tax_rate: 0.023  # 2.3% - Tarrant County
+    insurance_rate: 0.005
+
+    ltr_tiers:
+      - max_price: 280000
+        rate: 0.0080  # 0.80%
+      - max_price: 450000
+        rate: 0.0068  # 0.68%
+      - max_price: 650000
+        rate: 0.0058  # 0.58%
+      - max_price: null
+        rate: 0.0055  # 0.55%
+
+    zillow_search_url: "https://www.zillow.com/fort-worth-tx/{neighborhood}/"
+
+  abilene:
+    display_name: "Abilene, TX"
+    state: "TX"
+    zillow_city: "Abilene"
+    zillow_metro: "Abilene, TX"
+    has_str_data: false
+    airbnb_file: null
+
+    property_tax_rate: 0.021  # 2.1% - Taylor County
+    insurance_rate: 0.005
+
+    ltr_tiers:
+      - max_price: 150000
+        rate: 0.0095  # 0.95%
+      - max_price: 250000
+        rate: 0.0085  # 0.85%
+      - max_price: 400000
+        rate: 0.0075  # 0.75%
+      - max_price: null
+        rate: 0.0065  # 0.65%
+
+    zillow_search_url: "https://www.zillow.com/abilene-tx/{neighborhood}/"
+
+  waco:
+    display_name: "Waco, TX"
+    state: "TX"
+    zillow_city: "Waco"
+    zillow_metro: "Waco, TX"
+    has_str_data: false
+    airbnb_file: null
+
+    property_tax_rate: 0.022  # 2.2% - McLennan County
+    insurance_rate: 0.005
+
+    ltr_tiers:
+      - max_price: 200000
+        rate: 0.0090  # 0.90%
+      - max_price: 350000
+        rate: 0.0078  # 0.78%
+      - max_price: 500000
+        rate: 0.0068  # 0.68%
+      - max_price: null
+        rate: 0.0060  # 0.60%
+
+    zillow_search_url: "https://www.zillow.com/waco-tx/{neighborhood}/"
+
+  # ============================================
+  # FLORIDA METROS
+  # ============================================
+
+  miami:
+    display_name: "Miami, FL"
+    state: "FL"
+    zillow_city: "Miami"
+    zillow_metro: "Miami-Fort Lauderdale-Pompano Beach, FL"
+    has_str_data: false
+    airbnb_file: null
+
+    property_tax_rate: 0.019  # 1.9% - Miami-Dade County average
+    insurance_rate: 0.012     # Higher due to hurricane risk
+    property_tax_note: "Florida property taxes vary by county (0.8%-1.1% base + local). This default is for Miami-Dade. Adjust based on specific location."
+
+    ltr_tiers:
+      - max_price: 400000
+        rate: 0.0070  # 0.70%
+      - max_price: 700000
+        rate: 0.0055  # 0.55%
+      - max_price: 1000000
+        rate: 0.0045  # 0.45%
+      - max_price: null
+        rate: 0.0040  # 0.40%
+
+    zillow_search_url: "https://www.zillow.com/miami-fl/{neighborhood}/"
+
+  fort_lauderdale:
+    display_name: "Fort Lauderdale, FL"
+    state: "FL"
+    zillow_city: "Fort Lauderdale"
+    zillow_metro: "Miami-Fort Lauderdale-Pompano Beach, FL"
+    has_str_data: true
+    airbnb_file: "airbnb_broward_county.csv.gz"
+
+    property_tax_rate: 0.020  # 2.0% - Broward County average
+    insurance_rate: 0.012     # Higher due to hurricane risk
+    property_tax_note: "Florida property taxes vary by county (0.8%-1.1% base + local). This default is for Broward County. Adjust based on specific location."
+
+    ltr_tiers:
+      - max_price: 450000
+        rate: 0.0065  # 0.65%
+      - max_price: 750000
+        rate: 0.0052  # 0.52%
+      - max_price: 1000000
+        rate: 0.0045  # 0.45%
+      - max_price: null
+        rate: 0.0040  # 0.40%
+
+    zillow_search_url: "https://www.zillow.com/fort-lauderdale-fl/{neighborhood}/"
+
+  orlando:
+    display_name: "Orlando, FL"
+    state: "FL"
+    zillow_city: "Orlando"
+    zillow_metro: "Orlando-Kissimmee-Sanford, FL"
+    has_str_data: false
+    airbnb_file: null
+
+    property_tax_rate: 0.018  # 1.8% - Orange County average
+    insurance_rate: 0.010
+    property_tax_note: "Florida property taxes vary by county (0.8%-1.1% base + local). This default is for Orange County. Adjust based on specific location."
+
+    ltr_tiers:
+      - max_price: 300000
+        rate: 0.0075  # 0.75%
+      - max_price: 500000
+        rate: 0.0060  # 0.60%
+      - max_price: 700000
+        rate: 0.0050  # 0.50%
+      - max_price: null
+        rate: 0.0045  # 0.45%
+
+    zillow_search_url: "https://www.zillow.com/orlando-fl/{neighborhood}/"
+
+  tampa:
+    display_name: "Tampa, FL"
+    state: "FL"
+    zillow_city: "Tampa"
+    zillow_metro: "Tampa-St. Petersburg-Clearwater, FL"
+    has_str_data: false
+    airbnb_file: null
+
+    property_tax_rate: 0.017  # 1.7% - Hillsborough County average
+    insurance_rate: 0.011
+    property_tax_note: "Florida property taxes vary by county (0.8%-1.1% base + local). This default is for Hillsborough County. Adjust based on specific location."
+
+    ltr_tiers:
+      - max_price: 350000
+        rate: 0.0072  # 0.72%
+      - max_price: 550000
+        rate: 0.0058  # 0.58%
+      - max_price: 750000
+        rate: 0.0048  # 0.48%
+      - max_price: null
+        rate: 0.0042  # 0.42%
+
+    zillow_search_url: "https://www.zillow.com/tampa-fl/{neighborhood}/"
+
+  jacksonville:
+    display_name: "Jacksonville, FL"
+    state: "FL"
+    zillow_city: "Jacksonville"
+    zillow_metro: "Jacksonville, FL"
+    has_str_data: false
+    airbnb_file: null
+
+    property_tax_rate: 0.016  # 1.6% - Duval County average
+    insurance_rate: 0.009
+    property_tax_note: "Florida property taxes vary by county (0.8%-1.1% base + local). This default is for Duval County. Adjust based on specific location."
+
+    ltr_tiers:
+      - max_price: 280000
+        rate: 0.0080  # 0.80%
+      - max_price: 450000
+        rate: 0.0065  # 0.65%
+      - max_price: 650000
+        rate: 0.0055  # 0.55%
+      - max_price: null
+        rate: 0.0050  # 0.50%
+
+    zillow_search_url: "https://www.zillow.com/jacksonville-fl/{neighborhood}/"
