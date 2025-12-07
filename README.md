@@ -24,7 +24,7 @@
 
 ### Use the Live App (Recommended)
 
-**[Launch the Real Estate Investment Analyzer](https://austin-investment-analyzer.streamlit.app/)**
+**[Launch the Real Estate Investment Analyzer](https://property-analyst-pro.streamlit.app/)**
 
 No installation required - just click and start analyzing neighborhoods!
 
@@ -41,8 +41,8 @@ No installation required - just click and start analyzing neighborhoods!
 
 1. **Clone the repository:**
 ```bash
-   git clone https://github.com/cleburn/austin-investment-analyzer.git
-   cd austin-investment-analyzer
+   git clone https://github.com/cleburn/property-analyst-pro.git
+   cd property-analyst-pro
 ```
 
 2. **Install dependencies:**
