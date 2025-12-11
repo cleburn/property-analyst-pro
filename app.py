@@ -660,19 +660,28 @@ if analyze_button:
 
     # Top 5 neighborhoods
     st.header(f"Top 5 Neighborhoods: {strategy}")
+    st.caption("Click any result to expand full investment details")
 
     top_5 = df_sorted.head(5)
 
     for idx, row in top_5.iterrows():
         rank = top_5.index.get_loc(idx) + 1
 
+        # Build key metric string based on strategy
+        if "Cash Flow" in strategy:
+            metric_str = f"${row['calc_monthly_cf']:,.0f}/mo"
+        elif "Total ROI" in strategy:
+            metric_str = f"{row['calc_total_roi']:.1f}% ROI"
+        else:  # Appreciation
+            metric_str = f"{row['baseline_cagr']:.1f}% CAGR"
+
         # Include metro name in title for multi-metro mode
         if is_multi_metro:
-            expander_title = f"#{rank} - {row['neighborhood']} ({row['metro_display']})"
+            expander_title = f"#{rank} - {row['neighborhood']} ({row['metro_display']}) — {metric_str}"
         else:
-            expander_title = f"#{rank} - {row['neighborhood']}"
+            expander_title = f"#{rank} - {row['neighborhood']} — {metric_str}"
 
-        with st.expander(expander_title, expanded=(rank <= 3)):
+        with st.expander(expander_title, expanded=False):
 
             # Zillow link - use the specific metro's URL template
             row_metro_config = get_metro_config(row['metro'])
