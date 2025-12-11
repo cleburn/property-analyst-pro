@@ -4,8 +4,6 @@ import numpy as np
 from datetime import datetime
 from pathlib import Path
 import sys
-import plotly.express as px
-import plotly.graph_objects as go
 
 # Add project root to path for config imports
 sys.path.insert(0, str(Path(__file__).parent))
@@ -885,70 +883,6 @@ if analyze_button:
                 st.write(f"New Mortgage (P&I): ${new_mortgage:,.0f}/mo")
                 st.write(f"Future Rent: ${future_rent:,.0f}/mo")
                 st.write(f"**New Cash Flow: ${new_cash_flow:,.0f}/mo**")
-
-    st.markdown("---")
-
-    # Visualization
-    st.header("Visual Analysis")
-
-    # Create comparison chart
-    top_10 = df_sorted.head(10)
-
-    if "Cash Flow" in strategy:
-        fig = px.bar(
-            top_10,
-            x='neighborhood',
-            y='calc_monthly_cf',
-            title=f'Top 10 Neighborhoods - Monthly Cash Flow ({rental_code.upper()})',
-            labels={'calc_monthly_cf': 'Monthly Cash Flow ($)', 'neighborhood': 'Neighborhood'},
-            color='calc_monthly_cf',
-            color_continuous_scale='RdYlGn'
-        )
-        fig.update_layout(xaxis_tickangle=-45, height=500)
-        st.plotly_chart(fig, use_container_width=True)
-
-    elif "Total ROI" in strategy:
-        fig = px.bar(
-            top_10,
-            x='neighborhood',
-            y='calc_total_roi',
-            title=f'Top 10 Neighborhoods - {int(hold_period)}-Year Total ROI ({rental_code.upper()})',
-            labels={'calc_total_roi': f'{int(hold_period)}-Year Total ROI (%)', 'neighborhood': 'Neighborhood'},
-            color='calc_total_roi',
-            color_continuous_scale='Blues'
-        )
-        fig.update_layout(xaxis_tickangle=-45, height=500)
-        st.plotly_chart(fig, use_container_width=True)
-
-    else:  # Appreciation
-        fig = px.bar(
-            top_10,
-            x='neighborhood',
-            y='baseline_cagr',
-            title='Top 10 Neighborhoods - Historical Appreciation (2015-2019 CAGR)',
-            labels={'baseline_cagr': 'Annual Growth Rate (%)', 'neighborhood': 'Neighborhood'},
-            color='baseline_cagr',
-            color_continuous_scale='Greens'
-        )
-        fig.update_layout(xaxis_tickangle=-45, height=500)
-        st.plotly_chart(fig, use_container_width=True)
-
-    # Cash Flow vs Total ROI scatter
-    fig2 = px.scatter(
-        df_sorted.head(20),
-        x='calc_monthly_cf',
-        y='calc_total_roi',
-        size='current_price',
-        color='baseline_cagr',
-        hover_name='neighborhood',
-        title=f'Top 20: Cash Flow vs Total ROI (sized by price, colored by appreciation)',
-        labels={
-            'calc_monthly_cf': 'Monthly Cash Flow ($)',
-            'calc_total_roi': f'{int(hold_period)}-Year Total ROI (%)',
-            'baseline_cagr': 'Historical CAGR (%)'
-        }
-    )
-    st.plotly_chart(fig2, use_container_width=True)
 
 else:
     # Initial state

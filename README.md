@@ -220,9 +220,8 @@ Neighborhoods are ranked by the metric that matters most to your strategy:
 - Weighted linear regression for appreciation trends
 - Time-series analysis (25 years of data)
 
-**Visualization:**
-- Plotly (interactive charts)
-- Streamlit (interactive web interface)
+**Web Interface:**
+- Streamlit (interactive web application)
 
 **Deployment:**
 - Streamlit Cloud
@@ -250,6 +249,6 @@ This project is open source and available for educational and personal use. Data
 
 ---
 
-**Last Updated:** December 6, 2025
+**Last Updated:** December 10, 2025
 **Version:** 2.0
 **Status:** Production - Deployed to Streamlit Cloud with multi-metro support
