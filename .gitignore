@@ -46,3 +46,4 @@ data/processed/*
 
 # Claude Code
 .claude/
+CLAUDE.md
