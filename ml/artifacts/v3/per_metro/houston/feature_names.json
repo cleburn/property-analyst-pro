@@ -1,0 +1,18 @@
+[
+  "prev_price",
+  "log_prev_price",
+  "cagr_1yr",
+  "cagr_3yr",
+  "cagr_5yr",
+  "cagr_full",
+  "trend_acceleration",
+  "momentum_3m",
+  "volatility",
+  "downside_volatility",
+  "max_drawdown",
+  "distance_from_peak",
+  "months_since_peak",
+  "price_to_metro_median",
+  "data_coverage",
+  "history_months"
+]
