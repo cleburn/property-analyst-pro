@@ -40,24 +40,12 @@ config_loader = get_config_loader()
 @st.cache_data
 def load_data():
     """Load multi-metro processed data"""
-    # Try new multi-metro file first, fall back to legacy
     try:
         df = pd.read_csv('data/processed/neighborhoods_multi_metro.csv')
         return df
     except FileNotFoundError:
-        try:
-            # Fall back to legacy Austin-only file
-            df = pd.read_csv('data/processed/neighborhoods_v1.2_complete.csv')
-            # Add metro columns for backward compatibility
-            if 'metro' not in df.columns:
-                df['metro'] = 'austin'
-                df['metro_display'] = 'Austin, TX'
-                df['state'] = 'TX'
-                df['has_str_data'] = True
-            return df
-        except FileNotFoundError:
-            st.error("Data not found. Please run process_data.py first to generate processed data.")
-            st.stop()
+        st.error("Data not found. Please run process_data.py first to generate processed data.")
+        st.stop()
     except Exception as e:
         st.error(f"Error loading data: {str(e)}")
         st.stop()
