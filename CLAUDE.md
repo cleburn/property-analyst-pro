@@ -149,3 +149,26 @@ app.py (uses predictions for ROI calculations)
 - **Conservative projections**: Cap long-term appreciation at 7%/year
 - **Pre-computed predictions**: CSV lookup, not real-time inference
 - **Single canonical notebook**: 08_clean_pipeline_v2.ipynb does everything
+
+---
+
+## Monthly Update Workflow
+
+When new Zillow ZHVI data is released:
+
+```bash
+# 1. Download new ZHVI file from Zillow and save to:
+data/raw/zillow_zhvi_neighborhoods_updated.csv
+
+# 2. Open and run the notebook (all cells):
+notebooks/08_clean_pipeline_v2.ipynb
+
+# 3. Commit and push updated predictions:
+git add data/processed/appreciation_predictions_current.csv
+git commit -m "Update predictions with [Month Year] Zillow data"
+git push
+```
+
+Streamlit Cloud will auto-redeploy with new predictions.
+
+**Note:** The model file (`price_model.joblib`) stays local - only the predictions CSV is pushed.
