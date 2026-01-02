@@ -1,11 +1,19 @@
 """
 Appreciation Predictor for Streamlit App Integration (v3)
 
-This module provides ML-derived appreciation rates for the investment analysis app.
-Uses validated historical CAGRs from the v3 model's feature engineering.
+This module provides ML-predicted appreciation rates for the investment analysis app.
 
-The v3 model achieves 0.68% MAPE on price prediction, validating that the
-historical price patterns (including CAGRs) are highly predictive.
+Model C (24-month lookback):
+- RandomForest price prediction model
+- Trained on 2002-2024 data (36,681 examples)
+- Forward validated: 2.63% MAPE on November 2025
+- 24-month minimum history requirement
+- 14 features (cagr_2yr instead of cagr_3yr/cagr_5yr)
+
+Appreciation is derived from price predictions:
+  appreciation_rate = (predicted_price - current_price) / current_price * 100
+
+Predictions are pre-computed and stored in appreciation_predictions_current.csv
 """
 
 import pickle
@@ -17,151 +25,161 @@ from typing import Dict, Optional, List
 
 class AppreciationPredictor:
     """
-    Provides ML-derived appreciation rates for neighborhoods.
+    Provides ML-predicted appreciation rates for neighborhoods.
 
-    Uses the CAGR features calculated during v3 model training.
-    The model's 99.7% accuracy validates these patterns are meaningful.
+    Uses Model C (24-month lookback) price predictions to derive appreciation rates.
+    Forward validated: 2.63% MAPE on November 2025 data.
 
     Usage:
         predictor = get_predictor()
         if predictor:
-            df['ml_appreciation'] = df['neighborhood_id'].map(
-                predictor.get_appreciation_rates()
-            )
+            rates = predictor.get_predicted_appreciation_by_name()
+            df['ml_appreciation'] = df['key'].map(rates)
     """
 
-    def __init__(self, data_path: str = "data/processed/ml_data_v3.pkl"):
+    def __init__(
+        self,
+        predictions_path: str = "data/processed/appreciation_predictions_current.csv",
+        historical_path: str = "data/processed/ml_data_v3.pkl"
+    ):
         """
         Initialize the predictor.
 
         Args:
-            data_path: Path to the ML training data with computed features
+            predictions_path: Path to direct appreciation model predictions
+            historical_path: Path to historical CAGR data (fallback)
         """
-        self.data_path = Path(data_path)
-        self._appreciation_data: Optional[pd.DataFrame] = None
+        self.predictions_path = Path(predictions_path)
+        self.historical_path = Path(historical_path)
+
+        self._predictions_data: Optional[pd.DataFrame] = None
+        self._historical_data: Optional[pd.DataFrame] = None
+        self._name_to_prediction: Dict[str, float] = {}
+        self._name_to_historical: Dict[str, float] = {}
         self._loaded = False
 
     def _load_data(self) -> bool:
-        """Load the ML data and extract 2025 appreciation rates."""
+        """Load appreciation predictions and historical data."""
         if self._loaded:
-            return self._appreciation_data is not None
+            return self._predictions_data is not None or self._historical_data is not None
 
-        if not self.data_path.exists():
-            self._loaded = True
-            return False
+        # Load direct appreciation model predictions (primary)
+        if self.predictions_path.exists():
+            try:
+                self._predictions_data = pd.read_csv(self.predictions_path)
 
-        try:
-            with open(self.data_path, 'rb') as f:
-                data = pickle.load(f)
+                # Create name+metro lookup (use display_metro to match app data)
+                for _, row in self._predictions_data.iterrows():
+                    key = f"{row['neighborhood_name']}_{row['display_metro']}"
+                    self._name_to_prediction[key] = float(row['predicted_1yr_appreciation'])
 
-            # Combine train and test to get all examples
-            train_df = data['train_df']
-            test_df = data['test_df']
-            all_df = pd.concat([train_df, test_df], ignore_index=True)
+                print(f"Loaded {len(self._name_to_prediction)} appreciation predictions")
+            except Exception as e:
+                print(f"Error loading appreciation predictions: {e}")
 
-            # Extract 2025 examples (most recent features)
-            df_2025 = all_df[all_df['year'] == 2025].copy()
+        # Load historical CAGRs (fallback)
+        if self.historical_path.exists():
+            try:
+                with open(self.historical_path, 'rb') as f:
+                    data = pickle.load(f)
 
-            if len(df_2025) == 0:
-                self._loaded = True
-                return False
+                train_df = data['train_df']
+                test_df = data['test_df']
+                all_df = pd.concat([train_df, test_df], ignore_index=True)
 
-            # Store relevant columns for appreciation lookup
-            self._appreciation_data = df_2025[[
-                'neighborhood_id',
-                'neighborhood_name',
-                'metro',
-                'cagr_1yr',
-                'cagr_3yr',
-                'cagr_5yr',
-                'cagr_full',
-                'trend_acceleration',
-                'volatility',
-                'prev_price'
-            ]].copy()
+                # Extract 2025 examples (most recent features)
+                df_2025 = all_df[all_df['year'] == 2025].copy()
 
-            # Create neighborhood_id index for fast lookup
-            self._appreciation_data.set_index('neighborhood_id', inplace=True)
+                if len(df_2025) > 0:
+                    self._historical_data = df_2025
 
-            # Also create name+metro lookup for app integration
-            self._name_to_id = {}
-            for idx, row in self._appreciation_data.iterrows():
-                key = f"{row['neighborhood_name']}_{row['metro']}"
-                self._name_to_id[key] = idx
+                    # Create name+metro lookup for historical CAGRs
+                    for _, row in df_2025.iterrows():
+                        key = f"{row['neighborhood_name']}_{row['metro']}"
+                        if pd.notna(row.get('cagr_5yr')):
+                            self._name_to_historical[key] = float(row['cagr_5yr'])
 
-            self._loaded = True
-            return True
+                    print(f"Loaded {len(self._name_to_historical)} historical CAGRs (fallback)")
+            except Exception as e:
+                print(f"Error loading historical data: {e}")
 
-        except Exception as e:
-            print(f"Error loading ML data: {e}")
-            self._loaded = True
-            return False
+        self._loaded = True
+        return len(self._name_to_prediction) > 0 or len(self._name_to_historical) > 0
 
     def is_available(self) -> bool:
-        """Check if ML appreciation data is available."""
+        """Check if appreciation data is available."""
         self._load_data()
-        return self._appreciation_data is not None and len(self._appreciation_data) > 0
+        return len(self._name_to_prediction) > 0 or len(self._name_to_historical) > 0
+
+    def has_direct_predictions(self) -> bool:
+        """Check if direct appreciation model predictions are available."""
+        self._load_data()
+        return len(self._name_to_prediction) > 0
 
     def get_available_metros(self) -> List[str]:
-        """Get list of metros with ML appreciation data."""
+        """Get list of metros with appreciation data."""
         if not self.is_available():
             return []
-        return sorted(self._appreciation_data['metro'].unique().tolist())
 
-    def get_appreciation_rate(
-        self,
-        neighborhood_id: int,
-        rate_type: str = 'cagr_5yr'
-    ) -> Optional[float]:
+        if self._predictions_data is not None:
+            return sorted(self._predictions_data['display_metro'].unique().tolist())
+        elif self._historical_data is not None:
+            return sorted(self._historical_data['metro'].unique().tolist())
+        return []
+
+    def get_predicted_appreciation_by_name(self) -> Dict[str, float]:
         """
-        Get ML-derived appreciation rate for a single neighborhood.
+        Get ML-predicted appreciation rates keyed by 'name_metro'.
 
-        Args:
-            neighborhood_id: Zillow RegionID
-            rate_type: Which CAGR to use ('cagr_1yr', 'cagr_3yr', 'cagr_5yr', 'cagr_full')
+        Returns direct appreciation model predictions (preferred) with
+        historical CAGR fallback for missing neighborhoods.
 
         Returns:
-            Appreciation rate as percentage (e.g., 5.0 for 5%), or None if not found
-        """
-        if not self.is_available():
-            return None
-
-        if neighborhood_id not in self._appreciation_data.index:
-            return None
-
-        value = self._appreciation_data.loc[neighborhood_id, rate_type]
-        return float(value) if pd.notna(value) else None
-
-    def get_appreciation_rates(self, rate_type: str = 'cagr_5yr') -> Dict[int, float]:
-        """
-        Get ML-derived appreciation rates for all neighborhoods.
-
-        Args:
-            rate_type: Which CAGR to use ('cagr_1yr', 'cagr_3yr', 'cagr_5yr', 'cagr_full')
-
-        Returns:
-            Dict mapping neighborhood_id to appreciation rate
+            Dict mapping 'neighborhood_metro' to appreciation rate (%)
         """
         if not self.is_available():
             return {}
 
-        rates = self._appreciation_data[rate_type].to_dict()
-        # Filter out NaN values
-        return {k: float(v) for k, v in rates.items() if pd.notna(v)}
+        # Start with historical CAGRs
+        rates = self._name_to_historical.copy()
+
+        # Override with direct predictions where available
+        rates.update(self._name_to_prediction)
+
+        return rates
+
+    def get_appreciation_rates_by_name(self, rate_type: str = 'predicted') -> Dict[str, float]:
+        """
+        Get appreciation rates keyed by 'name_metro'.
+
+        Args:
+            rate_type: 'predicted' for direct model, 'cagr_5yr' for historical
+
+        Returns:
+            Dict mapping 'neighborhood_metro' to appreciation rate
+        """
+        if not self.is_available():
+            return {}
+
+        if rate_type == 'predicted':
+            return self.get_predicted_appreciation_by_name()
+        else:
+            # Return historical CAGRs only
+            return self._name_to_historical.copy()
 
     def get_appreciation_by_name(
         self,
         neighborhood_name: str,
         metro: str,
-        rate_type: str = 'cagr_5yr'
+        use_predicted: bool = True
     ) -> Optional[float]:
         """
-        Get ML-derived appreciation rate by neighborhood name and metro.
+        Get appreciation rate for a single neighborhood.
 
         Args:
-            neighborhood_name: Neighborhood name (from app data)
+            neighborhood_name: Neighborhood name
             metro: Metro identifier
-            rate_type: Which CAGR to use
+            use_predicted: If True, prefer direct model predictions
 
         Returns:
             Appreciation rate as percentage, or None if not found
@@ -170,139 +188,62 @@ class AppreciationPredictor:
             return None
 
         key = f"{neighborhood_name}_{metro}"
-        neighborhood_id = self._name_to_id.get(key)
 
-        if neighborhood_id is None:
-            return None
+        if use_predicted and key in self._name_to_prediction:
+            return self._name_to_prediction[key]
 
-        return self.get_appreciation_rate(neighborhood_id, rate_type)
+        if key in self._name_to_historical:
+            return self._name_to_historical[key]
 
-    def get_appreciation_rates_by_name(self, rate_type: str = 'cagr_5yr') -> Dict[str, float]:
-        """
-        Get ML-derived appreciation rates keyed by 'name_metro'.
+        return None
 
-        Args:
-            rate_type: Which CAGR to use
+    def get_model_info(self) -> Dict:
+        """Get information about the loaded models."""
+        self._load_data()
 
-        Returns:
-            Dict mapping 'neighborhood_metro' to appreciation rate
-        """
+        return {
+            'has_direct_predictions': len(self._name_to_prediction) > 0,
+            'num_direct_predictions': len(self._name_to_prediction),
+            'has_historical_fallback': len(self._name_to_historical) > 0,
+            'num_historical': len(self._name_to_historical),
+            'metros': self.get_available_metros(),
+            'model_type': 'Model C (24mo lookback, 2.63% MAPE)' if self.has_direct_predictions() else 'Historical CAGR'
+        }
+
+    def get_summary_stats(self) -> Dict:
+        """Get summary statistics about the appreciation data."""
         if not self.is_available():
             return {}
 
-        rates = {}
-        for key, neighborhood_id in self._name_to_id.items():
-            value = self._appreciation_data.loc[neighborhood_id, rate_type]
-            if pd.notna(value):
-                rates[key] = float(value)
-        return rates
+        rates = self.get_predicted_appreciation_by_name()
+        values = list(rates.values())
 
-    def get_appreciation_for_hold_period(
-        self,
-        neighborhood_id: int,
-        hold_years: int
-    ) -> Optional[float]:
-        """
-        Get appropriate appreciation rate based on hold period.
-
-        Uses different CAGR windows based on investment horizon:
-        - 1-2 years: Blend of 1yr and 3yr (more recent trend emphasis)
-        - 3-5 years: 5yr CAGR (established pattern)
-        - 6+ years: Blend of 5yr and full history
-
-        Args:
-            neighborhood_id: Zillow RegionID
-            hold_years: Investment hold period in years
-
-        Returns:
-            Appreciation rate as percentage, or None if not found
-        """
-        if not self.is_available():
-            return None
-
-        if neighborhood_id not in self._appreciation_data.index:
-            return None
-
-        row = self._appreciation_data.loc[neighborhood_id]
-
-        cagr_1yr = row.get('cagr_1yr', np.nan)
-        cagr_3yr = row.get('cagr_3yr', np.nan)
-        cagr_5yr = row.get('cagr_5yr', np.nan)
-        cagr_full = row.get('cagr_full', np.nan)
-
-        # Determine which rate to use based on hold period
-        if hold_years <= 2:
-            # Short-term: weight recent trends more
-            if pd.notna(cagr_1yr) and pd.notna(cagr_3yr):
-                rate = 0.6 * cagr_1yr + 0.4 * cagr_3yr
-            elif pd.notna(cagr_3yr):
-                rate = cagr_3yr
-            elif pd.notna(cagr_5yr):
-                rate = cagr_5yr
-            else:
-                rate = cagr_full
-        elif hold_years <= 5:
-            # Medium-term: use 5yr CAGR
-            if pd.notna(cagr_5yr):
-                rate = cagr_5yr
-            elif pd.notna(cagr_3yr):
-                rate = cagr_3yr
-            else:
-                rate = cagr_full
-        else:
-            # Long-term: blend 5yr and full history
-            if pd.notna(cagr_5yr) and pd.notna(cagr_full):
-                rate = 0.5 * cagr_5yr + 0.5 * cagr_full
-            elif pd.notna(cagr_5yr):
-                rate = cagr_5yr
-            else:
-                rate = cagr_full
-
-        return float(rate) if pd.notna(rate) else None
-
-    def get_all_features(self, neighborhood_id: int) -> Optional[Dict]:
-        """
-        Get all ML features for a neighborhood (for debugging/display).
-
-        Args:
-            neighborhood_id: Zillow RegionID
-
-        Returns:
-            Dict with all feature values, or None if not found
-        """
-        if not self.is_available():
-            return None
-
-        if neighborhood_id not in self._appreciation_data.index:
-            return None
-
-        row = self._appreciation_data.loc[neighborhood_id]
-        return row.to_dict()
-
-    def get_summary_stats(self) -> Dict:
-        """Get summary statistics about the ML appreciation data."""
-        if not self.is_available():
+        if not values:
             return {}
 
         return {
-            'total_neighborhoods': len(self._appreciation_data),
+            'total_neighborhoods': len(values),
             'metros': self.get_available_metros(),
-            'cagr_5yr_median': float(self._appreciation_data['cagr_5yr'].median()),
-            'cagr_5yr_mean': float(self._appreciation_data['cagr_5yr'].mean()),
-            'cagr_5yr_std': float(self._appreciation_data['cagr_5yr'].std()),
-            'cagr_5yr_min': float(self._appreciation_data['cagr_5yr'].min()),
-            'cagr_5yr_max': float(self._appreciation_data['cagr_5yr'].max()),
+            'mean_appreciation': float(np.mean(values)),
+            'median_appreciation': float(np.median(values)),
+            'std_appreciation': float(np.std(values)),
+            'min_appreciation': float(np.min(values)),
+            'max_appreciation': float(np.max(values)),
+            'model_type': 'Model C (24mo lookback, 2.63% MAPE)' if self.has_direct_predictions() else 'Historical CAGR'
         }
 
 
-def get_predictor(data_path: str = "data/processed/ml_data_v3.pkl") -> Optional[AppreciationPredictor]:
+def get_predictor(
+    predictions_path: str = "data/processed/appreciation_predictions_current.csv",
+    historical_path: str = "data/processed/ml_data_v3.pkl"
+) -> Optional[AppreciationPredictor]:
     """
     Factory function to get a predictor if data is available.
 
     Returns:
         AppreciationPredictor instance if data exists, None otherwise
     """
-    predictor = AppreciationPredictor(data_path)
+    predictor = AppreciationPredictor(predictions_path, historical_path)
 
     if predictor.is_available():
         return predictor

@@ -1,0 +1,27 @@
+{
+  "feature_cols": [
+    "prev_price",
+    "log_prev_price",
+    "cagr_1yr",
+    "cagr_2yr",
+    "cagr_full",
+    "trend_acceleration",
+    "momentum_3m",
+    "volatility",
+    "downside_volatility",
+    "max_drawdown",
+    "distance_from_peak",
+    "months_since_peak",
+    "price_to_metro_median",
+    "data_coverage",
+    "history_months"
+  ],
+  "min_history_months": 24,
+  "model_type": "RandomForestRegressor",
+  "training_years": "2002-2024",
+  "forward_validation_mape": 2.626765660144428,
+  "forward_validation_r2": 0.991489817355042,
+  "n_training_examples": 36681,
+  "n_predictions": 3684,
+  "created": "2026-01-01T21:09:17.432304"
+}
