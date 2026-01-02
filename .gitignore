@@ -29,9 +29,14 @@ data/raw/
 *.xlsx
 *.gz
 
-# Processed data - exclude all except the multi-metro output
+# Processed data - exclude all except app-required files
 data/processed/*
 !data/processed/neighborhoods_multi_metro.csv
+!data/processed/appreciation_predictions_current.csv
+
+# ML artifacts - models are large, only track what's needed for deployment
+ml/artifacts/**/*.joblib
+ml/artifacts/**/*.pkl
 
 # --- System / IDE ---
 .vscode/
